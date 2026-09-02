@@ -39,11 +39,13 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Prisma schema + generated engine/client are needed at runtime for migrations.
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+# The Prisma Client (engine + generated client) is already traced into the
+# standalone bundle above. We only need to ensure the generated client under
+# node_modules/.prisma is present for the init script to import at runtime.
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+
+# Startup schema-sync script (uses the bundled Prisma Client, not the CLI).
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 
 # Entrypoint applies the DB schema, then starts the server.
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
