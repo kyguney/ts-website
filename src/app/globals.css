@@ -295,6 +295,20 @@ body {
   font-size: 13px;
   color: var(--muted);
 }
+.foot__contact {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: var(--text);
+}
+.foot__contact a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+.foot__contact a:hover {
+  border-bottom-color: var(--accent);
+}
 .foot__disclaimer {
   margin-top: 6px;
   font-size: 12px;

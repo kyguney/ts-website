@@ -9,7 +9,13 @@
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "docker:up": "docker compose up --build -d",
+    "docker:up:logs": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:fresh": "docker compose build --no-cache && docker compose up -d",
+    "docker:logs": "docker compose logs -f",
+    "docker:restart": "docker compose down && docker compose up --build -d"
   },
   "dependencies": {
     "@prisma/client": "^6.1.0",

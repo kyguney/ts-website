@@ -48,10 +48,20 @@ npm run dev                   # http://localhost:3000
 
 ### Option B — full stack in Docker
 
+Convenience npm scripts wrap the common Docker commands:
+
 ```bash
-docker compose up --build     # builds the app + starts MySQL
+npm run docker:up        # build + start app & MySQL in the background
+npm run docker:up:logs   # same, but stream logs in the foreground
+npm run docker:logs      # tail logs of the running stack
+npm run docker:down      # stop and remove the stack
+npm run docker:restart   # down, then rebuild + start
+npm run docker:fresh     # rebuild with --no-cache (use if a change won't show)
 # open http://localhost:3000
 ```
+
+> Tip: if a code change doesn't appear, Docker is likely serving a cached
+> image — run `npm run docker:fresh`.
 
 The entrypoint runs `prisma db push` automatically on container start, so the
 `waitlist_entries` table is created before the app serves traffic.

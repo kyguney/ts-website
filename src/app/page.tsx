@@ -92,6 +92,10 @@ export default function Home() {
         </section>
 
         <footer className="foot">
+          <p className="foot__contact">
+            Questions or Comments? Reach us at{" "}
+            <a href="mailto:info@trendscore.io">info@trendscore.io</a>
+          </p>
           <p>© {new Date().getFullYear()} TrendScore.io — All rights reserved.</p>
           <p className="foot__disclaimer">
             Not financial advice. Crypto trading involves substantial risk.
