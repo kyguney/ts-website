@@ -19,6 +19,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # DATABASE_URL is not needed to build; Prisma client is generated from schema.
 RUN npm run build
+# Guarantee a public/ dir exists so the runner COPY never fails, even if the
+# repo has no static assets.
+RUN mkdir -p public
 
 # ---------- Runner ----------
 FROM base AS runner

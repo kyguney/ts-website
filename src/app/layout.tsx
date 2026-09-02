@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "TrendScore — AI Long/Short Signals for Crypto | Coming Soon",
   description:
     "TrendScore.io — AI-powered long/short predictions for the crypto market. Multi-agent market scanning, regime detection, and momentum signals. Launching soon.",
+  icons: {
+    icon: "/favicon.svg",
+  },
   openGraph: {
     title: "TrendScore.io — AI Long/Short Signals for Crypto",
     description:
