@@ -1,0 +1,46 @@
+# Local development stack: Next.js app + MySQL.
+# On Coolify you do NOT use this file for the DB — you attach Coolify's managed
+# MySQL and set DATABASE_URL in the app's environment instead (see README).
+#
+# Usage:
+#   docker compose up --build
+#   open http://localhost:3000
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-trendscore}
+      MYSQL_USER: ${MYSQL_USER:-trendscore}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-trendscorepass}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Points at the compose `db` service on the internal network.
+      # sslaccept=accept_invalid_certs: MySQL 8.4 ships a self-signed TLS cert;
+      # this lets Prisma connect without a P1017 handshake failure.
+      DATABASE_URL: "mysql://${MYSQL_USER:-trendscore}:${MYSQL_PASSWORD:-trendscorepass}@db:3306/${MYSQL_DATABASE:-trendscore}?sslaccept=accept_invalid_certs"
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+
+volumes:
+  db_data:
