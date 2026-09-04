@@ -67,6 +67,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# curl is needed for Coolify's container healthcheck (it shells into the
+# container and runs curl/wget against the health path).
+RUN apk add --no-cache curl
+
 # Non-root user.
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
