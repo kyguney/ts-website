@@ -12,12 +12,16 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # ---------- Stage 1: deps ----------
-# Install full dependencies (with BuildKit cache mount for the npm cache).
+# Install ALL dependencies (incl. dev) needed to build. `--include=dev` +
+# NODE_ENV=development guards against Coolify setting NODE_ENV=production, which
+# would otherwise make npm skip devDependencies and break the build (missing
+# @tailwindcss/postcss, typescript, @types/*).
 FROM base AS deps
+ENV NODE_ENV=development
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci
+    npm ci --include=dev
 
 # ---------- Stage 2: builder ----------
 # Generate the Prisma client and compile Next.js to a standalone server.
