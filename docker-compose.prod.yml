@@ -1,0 +1,95 @@
+# =============================================================================
+# Production stack for Coolify "Docker Compose" application type (Option B).
+#
+# This deploys the app together with its own Postgres and Redis. Coolify injects
+# environment variables from the application's Environment settings, so the
+# secrets below (POSTGRES_PASSWORD, NEXTAUTH_SECRET, Freemius keys, etc.) must be
+# set there — do NOT hard-code them here.
+#
+# If you prefer Coolify's managed one-click Postgres/Redis (Option A), do not use
+# this file: deploy the Dockerfile app on its own and point DATABASE_URL /
+# REDIS_URL at the managed services instead. See README.md.
+# =============================================================================
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* must be available at BUILD time to be inlined.
+        NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL}"
+        NEXT_PUBLIC_FREEMIUS_STORE_ID: "${NEXT_PUBLIC_FREEMIUS_STORE_ID}"
+        NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID: "${NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID:-85687}"
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      # Internal service hostnames on the compose network.
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      # Runtime-togglable in Coolify (restart to apply). Defaults to live.
+      NEXT_PUBLIC_MAINTENANCE_MODE: "${NEXT_PUBLIC_MAINTENANCE_MODE:-false}"
+      # Auth
+      NEXTAUTH_URL: "${NEXTAUTH_URL}"
+      NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
+      NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL}"
+      # Freemius
+      FREEMIUS_PRODUCT_ID: "${FREEMIUS_PRODUCT_ID}"
+      FREEMIUS_PUBLIC_KEY: "${FREEMIUS_PUBLIC_KEY}"
+      FREEMIUS_SECRET_KEY: "${FREEMIUS_SECRET_KEY}"
+      FREEMIUS_API_KEY: "${FREEMIUS_API_KEY}"
+      NEXT_PUBLIC_FREEMIUS_STORE_ID: "${NEXT_PUBLIC_FREEMIUS_STORE_ID}"
+      NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID: "${NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID:-85687}"
+      # OAuth (optional)
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+      MICROSOFT_CLIENT_ID: "${MICROSOFT_CLIENT_ID:-}"
+      MICROSOFT_CLIENT_SECRET: "${MICROSOFT_CLIENT_SECRET:-}"
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db_data:
+  redis_data:

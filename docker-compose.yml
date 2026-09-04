@@ -1,46 +1,81 @@
-# Local development stack: Next.js app + MySQL.
-# On Coolify you do NOT use this file for the DB — you attach Coolify's managed
-# MySQL and set DATABASE_URL in the app's environment instead (see README).
+# Local development stack: Next.js app + PostgreSQL + Redis.
+#
+# On Coolify you do NOT use this file for the DB/cache — you either attach
+# Coolify's managed Postgres/Redis (Option A) or deploy docker-compose.prod.yml
+# (Option B). See README.md.
 #
 # Usage:
-#   docker compose up --build
+#   npm run docker:up        (build + start in background)
+#   npm run docker:up:logs   (foreground with logs)
 #   open http://localhost:3000
 
 services:
   db:
-    image: mysql:8.4
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-trendscore}
-      MYSQL_USER: ${MYSQL_USER:-trendscore}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-trendscorepass}
+      POSTGRES_DB: ${POSTGRES_DB:-trendscore}
+      POSTGRES_USER: ${POSTGRES_USER:-trendscore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trendscorepass}
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trendscore} -d ${POSTGRES_DB:-trendscore}"]
       interval: 5s
       timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
       retries: 10
 
   web:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* must be present at BUILD time to be inlined.
+        NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+        NEXT_PUBLIC_FREEMIUS_STORE_ID: "${NEXT_PUBLIC_FREEMIUS_STORE_ID:-}"
+        NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID: "${NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID:-85687}"
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
-      # Points at the compose `db` service on the internal network.
-      # sslaccept=accept_invalid_certs: MySQL 8.4 ships a self-signed TLS cert;
-      # this lets Prisma connect without a P1017 handshake failure.
-      DATABASE_URL: "mysql://${MYSQL_USER:-trendscore}:${MYSQL_PASSWORD:-trendscorepass}@db:3306/${MYSQL_DATABASE:-trendscore}?sslaccept=accept_invalid_certs"
+      # Point at the compose services on the internal network.
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-trendscore}:${POSTGRES_PASSWORD:-trendscorepass}@db:5432/${POSTGRES_DB:-trendscore}?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      NEXT_PUBLIC_MAINTENANCE_MODE: ${NEXT_PUBLIC_MAINTENANCE_MODE:-false}
       NODE_ENV: production
+      # Auth (from .env)
+      NEXTAUTH_URL: "${NEXTAUTH_URL:-http://localhost:3000}"
+      NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
+      NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+      # Freemius (from .env)
+      FREEMIUS_PRODUCT_ID: "${FREEMIUS_PRODUCT_ID:-}"
+      FREEMIUS_PUBLIC_KEY: "${FREEMIUS_PUBLIC_KEY:-}"
+      FREEMIUS_SECRET_KEY: "${FREEMIUS_SECRET_KEY:-}"
+      FREEMIUS_API_KEY: "${FREEMIUS_API_KEY:-}"
+      NEXT_PUBLIC_FREEMIUS_STORE_ID: "${NEXT_PUBLIC_FREEMIUS_STORE_ID:-}"
+      NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID: "${NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID:-85687}"
     ports:
       - "3000:3000"
 
 volumes:
   db_data:
+  redis_data:

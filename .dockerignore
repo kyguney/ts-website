@@ -10,5 +10,9 @@ README.md
 Dockerfile
 .dockerignore
 docker-compose.yml
+docker-compose.prod.yml
 *.md
 .DS_Store
+
+# NOTE: do NOT ignore the prisma/ directory — the schema and migrations are
+# required in the build context for `prisma generate` and `migrate deploy`.

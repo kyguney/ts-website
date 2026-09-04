@@ -3,10 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+// ---------------------------------------------------------------------------
+// Waitlist (coming-soon page)
+// ---------------------------------------------------------------------------
 model WaitlistEntry {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -16,4 +19,94 @@ model WaitlistEntry {
   createdAt DateTime @default(now())
 
   @@map("waitlist_entries")
+}
+
+// ---------------------------------------------------------------------------
+// Auth (NextAuth / Auth.js) — standard adapter models + credentials password
+// ---------------------------------------------------------------------------
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  // Set for credentials (email/password) users; null for OAuth-only users.
+  passwordHash  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts     Account[]
+  sessions     Session[]
+  entitlements UserFsEntitlement[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Freemius entitlements — mirrors the Freemius JS SDK PurchaseDBData shape.
+// One row per license; access is gated by fsPricingId (Pro = 85687).
+// ---------------------------------------------------------------------------
+enum FsEntitlementType {
+  subscription
+  oneoff
+
+  @@map("fs_entitlement_type")
+}
+
+model UserFsEntitlement {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fsLicenseId String            @unique
+  fsPlanId    String
+  fsPricingId String
+  fsUserId    String
+  type        FsEntitlementType
+  expiration  DateTime?
+  isCanceled  Boolean
+  createdAt   DateTime
+
+  @@index([type])
+  @@map("user_fs_entitlement")
 }

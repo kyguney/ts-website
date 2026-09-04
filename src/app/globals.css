@@ -1,3 +1,64 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+   shadcn/ui design tokens (dark theme — the whole app is dark).
+   These power the shadcn components (buttons, dialogs, the Freemius
+   Customer Portal / Pricing / Paywall components, etc.).
+--------------------------------------------------------------------------- */
+:root {
+  --radius-ui: 0.625rem;
+  --background: oklch(0.16 0.02 265);
+  --foreground: oklch(0.95 0.01 265);
+  --card: oklch(0.19 0.02 265);
+  --card-foreground: oklch(0.95 0.01 265);
+  --popover: oklch(0.19 0.02 265);
+  --popover-foreground: oklch(0.95 0.01 265);
+  --primary: oklch(0.68 0.16 268);
+  --primary-foreground: oklch(0.16 0.02 265);
+  --secondary: oklch(0.27 0.02 265);
+  --secondary-foreground: oklch(0.95 0.01 265);
+  --muted-ui: oklch(0.27 0.02 265);
+  --muted-foreground: oklch(0.7 0.02 265);
+  --accent-ui: oklch(0.27 0.03 268);
+  --accent-foreground: oklch(0.95 0.01 265);
+  --destructive: oklch(0.62 0.2 20);
+  --border-ui: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.68 0.16 268);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted-ui);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent-ui);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border-ui);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius-ui) - 4px);
+  --radius-md: calc(var(--radius-ui) - 2px);
+  --radius-lg: var(--radius-ui);
+  --radius-xl: calc(var(--radius-ui) + 4px);
+  --font-sans: var(--font-body);
+}
+
+/* ---------------------------------------------------------------------------
+   Existing Coming Soon / landing custom properties (unchanged).
+--------------------------------------------------------------------------- */
 :root {
   --bg: #060810;
   --bg-soft: #0b0f1c;
@@ -17,18 +78,29 @@
   --font-body: "Inter", system-ui, -apple-system, sans-serif;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* Tailwind base: default border color + app background/foreground so shadcn
+   components render correctly. */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: var(--font-body);
+    background-color: var(--background);
+    color: var(--foreground);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+}
 
-html { scroll-behavior: smooth; }
-
-body {
-  font-family: var(--font-body);
-  background: radial-gradient(1200px 600px at 50% -10%, #131a30 0%, var(--bg) 55%);
-  color: var(--text);
-  min-height: 100vh;
-  line-height: 1.55;
-  overflow-x: hidden;
-  position: relative;
+/* Coming-soon page background + reset — scoped to the .wrap layout so it does
+   not interfere with the Tailwind-based landing/app pages. */
+.wrap,
+.wrap * {
+  box-sizing: border-box;
 }
 
 /* ---------- Background layers ---------- */

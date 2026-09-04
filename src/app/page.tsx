@@ -1,107 +1,16 @@
-import ChartBackground from "@/components/ChartBackground";
-import WaitlistForm from "@/components/WaitlistForm";
+import ComingSoon from "@/components/coming-soon";
+import { LandingPage } from "@/components/landing/landing-page";
+import { auth } from "@/auth";
 
-const FEATURES = [
-  {
-    icon: "📡",
-    title: "Market Scanner",
-    desc: "Continuous multi-symbol scanning for high-probability setups.",
-  },
-  {
-    icon: "🧭",
-    title: "Regime Detection",
-    desc: "Identifies trending vs. ranging conditions before you enter.",
-  },
-  {
-    icon: "⚡",
-    title: "Momentum & Volatility",
-    desc: "Spots spikes and shifts the moment they start building.",
-  },
-  {
-    icon: "🎯",
-    title: "Long / Short Scoring",
-    desc: "A single directional score you can act on with clarity.",
-  },
-];
+const isMaintenance = () => process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
 
-export default function Home() {
-  return (
-    <>
-      <div className="bg-grid" aria-hidden="true" />
-      <div className="bg-glow bg-glow--one" aria-hidden="true" />
-      <div className="bg-glow bg-glow--two" aria-hidden="true" />
-      <ChartBackground />
+export default async function Home() {
+  // Maintenance / pre-launch: show the Coming Soon page to everyone.
+  if (isMaintenance()) {
+    return <ComingSoon />;
+  }
 
-      <main className="wrap">
-        <header className="nav">
-          <a className="brand" href="/">
-            <span className="brand__mark" aria-hidden="true">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M3 16.5L9 10.5L13 14.5L21 6.5"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M15 6.5H21V12.5"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <span className="brand__name">
-              TrendScore<span className="brand__dot">.io</span>
-            </span>
-          </a>
-          <span className="badge">Coming Soon</span>
-        </header>
-
-        <section className="hero">
-          <p className="eyebrow">AI-Powered Crypto Intelligence</p>
-          <h1 className="title">
-            <span className="title__line">Know when to</span>
-            <span className="title__line">
-              go <span className="grad grad--long">Long</span> or{" "}
-              <span className="grad grad--short">Short</span>
-            </span>
-          </h1>
-          <p className="subtitle">
-            TrendScore reads the market with a multi-agent AI engine — scanning
-            momentum, detecting regime shifts, and scoring long/short setups
-            across the crypto market, so you act with conviction instead of
-            guessing.
-          </p>
-
-          <WaitlistForm />
-
-          <ul className="features">
-            {FEATURES.map((f) => (
-              <li key={f.title}>
-                <span className="features__icon">{f.icon}</span>
-                <div>
-                  <h3>{f.title}</h3>
-                  <p>{f.desc}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <footer className="foot">
-          <p className="foot__contact">
-            Questions or Comments? Reach us at{" "}
-            <a href="mailto:info@trendscore.io">info@trendscore.io</a>
-          </p>
-          <p>© {new Date().getFullYear()} TrendScore.io — All rights reserved.</p>
-          <p className="foot__disclaimer">
-            Not financial advice. Crypto trading involves substantial risk.
-          </p>
-        </footer>
-      </main>
-    </>
-  );
+  // Live: show the marketing/demo landing page.
+  const session = await auth();
+  return <LandingPage isAuthed={!!session?.user} />;
 }
