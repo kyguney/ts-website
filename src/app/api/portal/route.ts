@@ -3,38 +3,25 @@
  * invoices, billing) rendered inside our dashboard at /dashboard/billing.
  */
 import { getFreemius, IS_FREEMIUS_SANDBOX } from "@/lib/freemius";
-import {
-  getFsUser,
-  processPurchaseInfo,
-} from "@/lib/user-entitlement";
+import { getFsUser, processPurchaseInfo } from "@/lib/user-entitlement";
+import { resolveAppUrl } from "@/lib/app-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const PORTAL_ENDPOINT = () => process.env.NEXT_PUBLIC_APP_URL! + "/api/portal";
-
-let processor: ((request: Request) => Promise<Response>) | null = null;
-
-function getProcessor() {
-  if (!processor) {
-    const freemius = getFreemius();
-    processor = freemius.customerPortal.request.createProcessor({
-      getUser: getFsUser,
-      portalEndpoint: PORTAL_ENDPOINT(),
-      isSandbox: IS_FREEMIUS_SANDBOX,
-      onRestore: freemius.customerPortal.createRestorer(processPurchaseInfo),
-    });
-  }
-  return processor;
-}
-
 async function handle(request: Request): Promise<Response> {
-  try {
-    const res = await getProcessor()(request);
+  const endpoint = resolveAppUrl(request) + "/api/portal";
+  const freemius = getFreemius();
 
-    // The SDK's processor returns a 500 Response (rather than throwing) when
-    // the underlying Freemius call fails. Detect that and log details so we
-    // can see the real cause in the server logs.
+  const processor = freemius.customerPortal.request.createProcessor({
+    getUser: getFsUser,
+    portalEndpoint: endpoint,
+    isSandbox: IS_FREEMIUS_SANDBOX,
+    onRestore: freemius.customerPortal.createRestorer(processPurchaseInfo),
+  });
+
+  try {
+    const res = await processor(request);
     if (res.status >= 500) {
       let body = "";
       try {
@@ -43,9 +30,9 @@ async function handle(request: Request): Promise<Response> {
         /* ignore */
       }
       const fsUser = await getFsUser().catch((e) => ({ error: String(e) }));
-      console.error("[api/portal] processor returned", res.status, {
+      console.error("[api/portal] processor 500", {
         sandbox: IS_FREEMIUS_SANDBOX,
-        endpoint: PORTAL_ENDPOINT(),
+        endpoint,
         body,
         fsUser,
       });
@@ -55,7 +42,7 @@ async function handle(request: Request): Promise<Response> {
     console.error("[api/portal] threw:", err);
     const message = err instanceof Error ? err.stack || err.message : String(err);
     return new Response(
-      JSON.stringify({ error: message, sandbox: IS_FREEMIUS_SANDBOX }),
+      JSON.stringify({ error: message, sandbox: IS_FREEMIUS_SANDBOX, endpoint }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

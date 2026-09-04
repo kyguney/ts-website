@@ -28,7 +28,7 @@ export default async function BillingPage() {
       </div>
 
       <AppCheckoutProvider checkout={checkout.serialize()}>
-        <CustomerPortal endpoint={process.env.NEXT_PUBLIC_APP_URL! + "/api/portal"} />
+        <CustomerPortal endpoint="/api/portal" />
       </AppCheckoutProvider>
     </div>
   );
