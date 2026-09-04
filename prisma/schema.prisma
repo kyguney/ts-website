@@ -110,3 +110,47 @@ model UserFsEntitlement {
   @@index([type])
   @@map("user_fs_entitlement")
 }
+
+// ---------------------------------------------------------------------------
+// Market Analysis — historical record of qualifying trade setups detected by
+// the ingestion/analysis worker. Powers the dashboard's historical views.
+// One row per detected candidate (symbol + interval + detection time).
+// ---------------------------------------------------------------------------
+enum TradeDirection {
+  LONG
+  SHORT
+
+  @@map("trade_direction")
+}
+
+model MarketAnalysis {
+  id        String   @id @default(cuid())
+  symbol    String   @db.VarChar(32)
+  interval  String   @db.VarChar(8)
+  direction TradeDirection
+  // Pattern label, verbatim from the engine taxonomy (may contain emoji).
+  pattern   String   @db.VarChar(64)
+  score     Float
+  price     Float
+
+  change24hPct     Float
+  volume24hUsdt    Float
+  rsi14            Float
+  atrRatioPct      Float
+  volumeSpurtRatio Float
+  coilingSqueezePct Float
+
+  isExhausted      Boolean @default(false)
+  isEarlyPumpBonus Boolean @default(false)
+  statusLabel      String  @db.VarChar(64)
+
+  // Full indicator snapshot at detection time (IndicatorSnapshot shape).
+  indicators Json
+
+  detectedAt DateTime @default(now())
+
+  @@index([symbol, interval])
+  @@index([detectedAt])
+  @@index([score])
+  @@map("market_analysis")
+}

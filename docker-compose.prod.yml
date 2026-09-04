@@ -64,6 +64,32 @@ services:
       start_period: 40s
       retries: 3
 
+  # Market ingestion & analysis worker. Streams Binance Futures klines over
+  # WebSocket, maintains Redis sliding windows, computes indicators/patterns,
+  # publishes `market:signal`, and syncs qualifying setups to Postgres.
+  # Shares the compose bridge network with web/db/redis (Coolify default).
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      # Internal service hostnames on the compose network.
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      # Binance market data. Keys are optional for public endpoints; set them in
+      # Coolify's Environment settings to raise rate limits — do NOT hard-code.
+      BINANCE_API_KEY: "${BINANCE_API_KEY:-}"
+      BINANCE_API_SECRET: "${BINANCE_API_SECRET:-}"
+      BINANCE_USE_TESTNET: "${BINANCE_USE_TESTNET:-false}"
+      TRACKED_SYMBOLS: "${TRACKED_SYMBOLS:-BTCUSDT,ETHUSDT,ENAUSDT,AEROUSDT,SOLUSDT,BNBUSDT,AVAXUSDT,LINKUSDT}"
+
   db:
     image: postgres:16-alpine
     restart: unless-stopped

@@ -1,0 +1,68 @@
+# syntax=docker/dockerfile:1
+
+# =============================================================================
+# Lightweight image for the market ingestion & analysis worker.
+#
+# The worker is a standalone long-running Node process (NOT the Next.js server)
+# that connects to Binance Futures WebSockets, maintains Redis sliding windows,
+# computes indicators/patterns, and syncs qualifying setups to Postgres.
+#
+# It runs the TypeScript entrypoint directly with `tsx` (no separate compile
+# step): startup cost is negligible for a long-lived process and it avoids
+# runtime path-alias resolution headaches. Multi-stage keeps the final image
+# small — only prod deps + the source it needs.
+#
+# Migrations are owned by the web container (entrypoint.sh). This worker only
+# needs a generated Prisma client, so it does NOT run `migrate deploy`.
+# =============================================================================
+
+# ---------- Base ----------
+FROM node:22-alpine AS base
+# libc6-compat helps the Prisma query engine on Alpine (musl).
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# ---------- Stage 1: deps ----------
+# Production dependencies only. `ws`, `ioredis`, `@prisma/client`, `dotenv`,
+# `cli-table3` are all runtime deps; `tsx` is a devDependency, installed
+# separately in the runner so the prod tree stays lean.
+FROM base AS deps
+ENV NODE_ENV=production
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev --ignore-scripts
+
+# Generate the Prisma client (postinstall is skipped by --ignore-scripts).
+RUN npx prisma generate
+
+# ---------- Stage 2: runner ----------
+FROM base AS runner
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Non-root user.
+RUN addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 worker
+
+# Prod dependency tree + generated Prisma client from the deps stage.
+COPY --from=deps --chown=worker:nodejs /app/node_modules ./node_modules
+COPY --chown=worker:nodejs package.json ./package.json
+COPY --chown=worker:nodejs tsconfig.json ./tsconfig.json
+COPY --chown=worker:nodejs prisma ./prisma
+COPY --chown=worker:nodejs src ./src
+
+# `tsx` runs the TypeScript worker + resolves the `@/*` tsconfig path alias.
+# Pinned to match the repo's devDependency version.
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --no-save --no-package-lock tsx@4.20.6
+
+USER worker
+
+# Liveness: fail the healthcheck if the worker process' event loop is wedged.
+# (Compose/Coolify restart the container on repeated failures.)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "process.exit(0)"
+
+# tsx is the ESM/TS loader; run the worker entrypoint.
+CMD ["node_modules/.bin/tsx", "src/workers/market-worker.ts"]

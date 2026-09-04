@@ -1,0 +1,21 @@
+{
+  // Type-check config for the pure Node processes (worker + CLI), which run via
+  // `tsx` (no separate emit step). The Next.js app is checked/compiled by
+  // `next build` with the root tsconfig; this validates the worker against
+  // NodeNext module resolution so the Docker image (Dockerfile.worker) is safe.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/workers/**/*.ts", "src/lib/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["node_modules", ".next", "dist-worker"]
+}
