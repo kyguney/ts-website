@@ -2,7 +2,7 @@
  * Backs the embedded Freemius Customer Portal (subscription management,
  * invoices, billing) rendered inside our dashboard at /dashboard/billing.
  */
-import { getFreemius } from "@/lib/freemius";
+import { getFreemius, IS_FREEMIUS_SANDBOX } from "@/lib/freemius";
 import { getFsUser, processPurchaseInfo } from "@/lib/user-entitlement";
 
 export const runtime = "nodejs";
@@ -17,7 +17,7 @@ function getProcessor() {
     processor = freemius.customerPortal.request.createProcessor({
       getUser: getFsUser,
       portalEndpoint: process.env.NEXT_PUBLIC_APP_URL! + "/api/portal",
-      isSandbox: process.env.NODE_ENV !== "production",
+      isSandbox: IS_FREEMIUS_SANDBOX,
       onRestore: freemius.customerPortal.createRestorer(processPurchaseInfo),
     });
   }

@@ -24,3 +24,17 @@ export function getFreemius(): Freemius {
 /** The Pro plan's Freemius pricing id — used to gate Pro-only features. */
 export const PRO_PRICING_ID =
   process.env.NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID ?? "85687";
+
+/**
+ * Whether checkout should run in Freemius SANDBOX (test) mode.
+ *
+ * Controlled by FREEMIUS_SANDBOX so you can test with fake cards on a live
+ * (NODE_ENV=production) deploy, then flip it off for real launch:
+ *   FREEMIUS_SANDBOX="true"  -> test payments (card 4242 4242 4242 4242)
+ *   unset / "false"          -> live payments
+ * Falls back to sandbox automatically in non-production (local dev).
+ */
+export const IS_FREEMIUS_SANDBOX =
+  process.env.FREEMIUS_SANDBOX === "true" ||
+  (process.env.FREEMIUS_SANDBOX !== "false" &&
+    process.env.NODE_ENV !== "production");

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getFreemius } from "@/lib/freemius";
+import { getFreemius, IS_FREEMIUS_SANDBOX } from "@/lib/freemius";
 import { getUserPlan } from "@/lib/user-entitlement";
 import AppCheckoutProvider from "@/components/app-checkout-provider";
 import { Subscribe } from "@/react-starter/components/subscribe";
@@ -20,7 +20,7 @@ export default async function UpgradePage() {
       email: session.user.email!,
       name: session.user.name ?? undefined,
     },
-    isSandbox: process.env.NODE_ENV !== "production",
+    isSandbox: IS_FREEMIUS_SANDBOX,
   });
 
   return (
@@ -30,6 +30,11 @@ export default async function UpgradePage() {
         <p className="text-sm text-muted-foreground">
           Unlock the full market scanner, real-time signals, and spike alerts.
         </p>
+        {IS_FREEMIUS_SANDBOX && (
+          <p className="mt-2 inline-block rounded-md bg-amber-500/15 px-2 py-1 text-xs font-medium text-amber-400">
+            Sandbox mode — use test card 4242 4242 4242 4242 (no real charge).
+          </p>
+        )}
       </div>
 
       <AppCheckoutProvider checkout={checkout.serialize()}>

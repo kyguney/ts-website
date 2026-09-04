@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getFreemius } from "@/lib/freemius";
+import { getFreemius, IS_FREEMIUS_SANDBOX } from "@/lib/freemius";
 import AppCheckoutProvider from "@/components/app-checkout-provider";
 import { CustomerPortal } from "@/react-starter/components/customer-portal";
 
@@ -15,7 +15,7 @@ export default async function BillingPage() {
       email: session.user.email!,
       name: session.user.name ?? undefined,
     },
-    isSandbox: process.env.NODE_ENV !== "production",
+    isSandbox: IS_FREEMIUS_SANDBOX,
   });
 
   return (
