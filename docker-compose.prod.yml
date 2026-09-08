@@ -21,6 +21,9 @@ services:
         NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL}"
         NEXT_PUBLIC_FREEMIUS_STORE_ID: "${NEXT_PUBLIC_FREEMIUS_STORE_ID}"
         NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID: "${NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID:-85687}"
+        # Browser WebSocket gateway URL, inlined into the client bundle at build.
+        # Route via reverse proxy: wss://trendscore.io/ws
+        NEXT_PUBLIC_WS_URL: "${NEXT_PUBLIC_WS_URL:-wss://trendscore.io/ws}"
     restart: unless-stopped
     depends_on:
       db:
@@ -45,6 +48,7 @@ services:
       FREEMIUS_API_KEY: "${FREEMIUS_API_KEY}"
       NEXT_PUBLIC_FREEMIUS_STORE_ID: "${NEXT_PUBLIC_FREEMIUS_STORE_ID}"
       NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID: "${NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID:-85687}"
+      NEXT_PUBLIC_WS_URL: "${NEXT_PUBLIC_WS_URL:-wss://trendscore.io/ws}"
       FREEMIUS_SANDBOX: "${FREEMIUS_SANDBOX:-false}"
       # OAuth (optional)
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
@@ -89,6 +93,38 @@ services:
       BINANCE_API_SECRET: "${BINANCE_API_SECRET:-}"
       BINANCE_USE_TESTNET: "${BINANCE_USE_TESTNET:-false}"
       TRACKED_SYMBOLS: "${TRACKED_SYMBOLS:-BTCUSDT,ETHUSDT,ENAUSDT,AEROUSDT,SOLUSDT,BNBUSDT,AVAXUSDT,LINKUSDT}"
+
+  # Client WebSocket gateway. Holds the many long-lived browser connections,
+  # verifies the NextAuth session JWT (NEXTAUTH_SECRET), subscribes ONCE to
+  # Redis Pub/Sub, and fans out to connections with plan-based (Free/Pro)
+  # channel authorization. Exposes port 3001 — route it in Coolify/your reverse
+  # proxy as `wss://<domain>/ws` (matching NEXT_PUBLIC_WS_URL above).
+  ws-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.ws
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      WS_GATEWAY_PORT: "3001"
+      # Must match the web app's secret so issued session tokens verify.
+      NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
+      # Pro plan gate (plan lookups read Freemius entitlements from the DB).
+      NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID: "${NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID:-85687}"
+      FREEMIUS_PRODUCT_ID: "${FREEMIUS_PRODUCT_ID}"
+      FREEMIUS_PUBLIC_KEY: "${FREEMIUS_PUBLIC_KEY}"
+      FREEMIUS_SECRET_KEY: "${FREEMIUS_SECRET_KEY}"
+      FREEMIUS_API_KEY: "${FREEMIUS_API_KEY}"
+      NEXT_PUBLIC_FREEMIUS_STORE_ID: "${NEXT_PUBLIC_FREEMIUS_STORE_ID}"
+    ports:
+      - "3001:3001"
 
   db:
     image: postgres:16-alpine

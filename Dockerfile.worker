@@ -53,9 +53,14 @@ COPY --chown=worker:nodejs prisma ./prisma
 COPY --chown=worker:nodejs src ./src
 
 # `tsx` runs the TypeScript worker + resolves the `@/*` tsconfig path alias.
-# Pinned to match the repo's devDependency version.
+# Installing into the existing prod `node_modules` with `--no-save` is
+# unreliable (npm may not materialize the package), so install tsx into an
+# isolated prefix (/opt/tsx) and invoke its CLI file directly. Pinned to match
+# the repo's devDependency version. The `test -f` fails the build loudly if the
+# CLI ever goes missing, rather than crash-looping the container at runtime.
 RUN --mount=type=cache,target=/root/.npm \
-    npm install --no-save --no-package-lock tsx@4.20.6
+    npm install --prefix /opt/tsx --no-save --no-package-lock tsx@4.20.6 \
+  && test -f /opt/tsx/node_modules/tsx/dist/cli.mjs
 
 USER worker
 
@@ -64,5 +69,6 @@ USER worker
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "process.exit(0)"
 
-# tsx is the ESM/TS loader; run the worker entrypoint.
-CMD ["node_modules/.bin/tsx", "src/workers/market-worker.ts"]
+# tsx is the ESM/TS loader; run the worker entrypoint. Invoke the CLI file
+# directly from the isolated tsx install.
+CMD ["node", "/opt/tsx/node_modules/tsx/dist/cli.mjs", "src/workers/market-worker.ts"]

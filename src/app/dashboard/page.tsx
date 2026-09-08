@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getUserPlan } from "@/lib/user-entitlement";
-import { SignalsTable } from "@/components/dashboard/signals-table";
+import { getUserPreferences } from "@/lib/user-preferences";
+import { DashboardLive } from "@/components/dashboard/dashboard-live";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +20,7 @@ export default async function DashboardPage() {
   if (!session?.user) redirect("/login?callbackUrl=/dashboard");
 
   const plan = await getUserPlan(session.user.id);
+  const preferences = await getUserPreferences(session.user.id);
 
   return (
     <div className="flex flex-col gap-6">
@@ -57,10 +59,14 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      <SignalsTable plan={plan} />
+      <DashboardLive
+        plan={plan}
+        initialIntervals={preferences.intervals}
+        initialFavorites={preferences.favoritePairs}
+      />
 
       <p className="text-xs text-muted-foreground">
-        Sample data for demonstration. Not financial advice.
+        Real-time market data via the live signal engine. Not financial advice.
       </p>
     </div>
   );

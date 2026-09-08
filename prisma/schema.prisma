@@ -38,8 +38,26 @@ model User {
   accounts     Account[]
   sessions     Session[]
   entitlements UserFsEntitlement[]
+  preference   UserPreference?
 
   @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Per-user analysis preferences. Pro users configure their active intervals
+// and favorite pairs; Free users are pinned to the default 15m broadcast and
+// cannot edit these (enforced at the API layer). One row per user.
+// ---------------------------------------------------------------------------
+model UserPreference {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Pro users can set any subset of: ["5m", "15m", "30m", "1h"].
+  intervals     String[] @default(["15m"])
+  favoritePairs String[] @default([])
+  updatedAt     DateTime @updatedAt
+
+  @@map("user_preferences")
 }
 
 model Account {
@@ -143,6 +161,19 @@ model MarketAnalysis {
   isExhausted      Boolean @default(false)
   isEarlyPumpBonus Boolean @default(false)
   statusLabel      String  @db.VarChar(64)
+
+  // --- AI analysis fields (Phase 3) ---------------------------------------
+  // Raw pattern score at detection (mirrors `score`, kept explicit so AI/UI
+  // layers can distinguish the engine score from AI-derived confidence).
+  patternScore    Float   @default(0)
+  // Human-readable risk:reward, e.g. "1:2.5". Null when AI didn't produce one.
+  riskRewardRatio String? @db.VarChar(16)
+  entryPrice      Float?
+  stopLoss        Float?
+  takeProfit1     Float?
+  takeProfit2     Float?
+  // Pro-only by default; Free broadcast rows (if ever persisted) set this false.
+  isProOnly       Boolean @default(true)
 
   // Full indicator snapshot at detection time (IndicatorSnapshot shape).
   indicators Json

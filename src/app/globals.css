@@ -393,6 +393,24 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ---------------------------------------------------------------------------
+   Live dashboard: price/score flash on real-time updates (Pro).
+--------------------------------------------------------------------------- */
+@keyframes flash-up {
+  0%   { background-color: rgba(34, 211, 138, 0.35); }
+  100% { background-color: transparent; }
+}
+@keyframes flash-down {
+  0%   { background-color: rgba(255, 93, 115, 0.35); }
+  100% { background-color: transparent; }
+}
+.flash-up { animation: flash-up 0.6s ease-out; }
+.flash-down { animation: flash-down 0.6s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .flash-up, .flash-down { animation: none !important; }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 860px) {
   .features { grid-template-columns: repeat(2, 1fr); }

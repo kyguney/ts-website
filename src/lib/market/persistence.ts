@@ -9,13 +9,28 @@
 import { prisma } from "@/lib/prisma";
 import type { AnalysisCandidate, IndicatorSnapshot } from "@/lib/market/types";
 
+/** Optional AI-derived fields attached when a candidate has been analyzed. */
+export interface PersistAiFields {
+  patternScore?: number;
+  riskRewardRatio?: string | null;
+  entryPrice?: number | null;
+  stopLoss?: number | null;
+  takeProfit1?: number | null;
+  takeProfit2?: number | null;
+  isProOnly?: boolean;
+}
+
 /**
  * Persists a qualifying candidate as a historical MarketAnalysis row.
  * Returns true on success, false if the insert failed (logged).
+ *
+ * `ai` is optional: when the AI layer has produced entry/stop/target levels
+ * for this candidate they are stored alongside the raw engine metrics.
  */
 export async function persistCandidate(
   candidate: AnalysisCandidate,
   indicators: IndicatorSnapshot,
+  ai?: PersistAiFields,
 ): Promise<boolean> {
   try {
     await prisma.marketAnalysis.create({
@@ -35,6 +50,14 @@ export async function persistCandidate(
         isExhausted: candidate.isExhausted,
         isEarlyPumpBonus: candidate.isEarlyPumpBonus,
         statusLabel: candidate.statusLabel,
+        // --- AI fields (Phase 3) — default to the engine score when no AI ---
+        patternScore: ai?.patternScore ?? candidate.score,
+        riskRewardRatio: ai?.riskRewardRatio ?? null,
+        entryPrice: ai?.entryPrice ?? null,
+        stopLoss: ai?.stopLoss ?? null,
+        takeProfit1: ai?.takeProfit1 ?? null,
+        takeProfit2: ai?.takeProfit2 ?? null,
+        isProOnly: ai?.isProOnly ?? true,
         indicators: indicators as unknown as object,
       },
     });
