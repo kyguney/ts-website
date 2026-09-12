@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { FREE_MAX_FAVORITES, PRO_MAX_FAVORITES } from "@/lib/validation";
 
 export interface FavoritesManagerProps {
-  plan: "free" | "pro";
+  plan: "free" | "pro" | "ultimate";
   favorites: string[];
   /** Add a symbol (parent enforces caps + persistence). */
   onAdd: (symbol: string) => void;
@@ -34,7 +34,7 @@ export function FavoritesManager({
   onRemove,
 }: FavoritesManagerProps) {
   const [input, setInput] = useState("");
-  const max = plan === "pro" ? PRO_MAX_FAVORITES : FREE_MAX_FAVORITES;
+  const max = plan === "free" ? FREE_MAX_FAVORITES : PRO_MAX_FAVORITES;
 
   const submit = () => {
     const sym = normalizeSymbol(input);

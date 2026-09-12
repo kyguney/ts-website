@@ -2,8 +2,9 @@
 // /api/user/preferences — read & update analysis preferences (Phase 3).
 //
 //   GET   — returns the current user's preferences (any authenticated user).
-//   PATCH — updates active timeframes / favorite pairs. PRO ONLY: Free users
-//           are blocked with HTTP 403 (upgrade required).
+//   PATCH — updates favorite pairs + risk params (all tiers) and active
+//           timeframes (Pro/Ultimate only; Free is blocked with HTTP 403 if it
+//           tries to change intervals).
 // ---------------------------------------------------------------------------
 
 import { NextResponse } from "next/server";
@@ -73,10 +74,11 @@ export async function PATCH(req: Request) {
     );
   }
 
-  // Gate: only Pro users can customize timeframes. Free users may still PATCH
-  // their favorites — we simply ignore any interval field they send (and 403
-  // only if they explicitly try to change intervals).
-  if (plan !== "pro" && parsed.data.intervals !== undefined) {
+  // Gate: only Pro/Ultimate users can customize timeframes. Free users may
+  // still PATCH favorites and risk params — we simply ignore any interval field
+  // they send (and 403 only if they explicitly try to change intervals).
+  const canCustomizeIntervals = plan === "pro" || plan === "ultimate";
+  if (!canCustomizeIntervals && parsed.data.intervals !== undefined) {
     return NextResponse.json(
       {
         ok: false,
@@ -91,7 +93,7 @@ export async function PATCH(req: Request) {
   const current = await getUserPreferences(userId);
 
   const nextIntervals =
-    plan === "pro" && parsed.data.intervals !== undefined
+    canCustomizeIntervals && parsed.data.intervals !== undefined
       ? parsed.data.intervals
       : current.intervals;
 
@@ -100,9 +102,22 @@ export async function PATCH(req: Request) {
       ? parsed.data.favoritePairs
       : current.favoritePairs;
 
+  // Risk params are editable for ALL tiers — merge whatever the caller sent.
+  const nextLeverage =
+    parsed.data.defaultLeverage !== undefined
+      ? parsed.data.defaultLeverage
+      : current.defaultLeverage;
+
+  const nextRrRatio =
+    parsed.data.defaultRrRatio !== undefined
+      ? parsed.data.defaultRrRatio
+      : current.defaultRrRatio;
+
   const saved = await upsertUserPreferences(userId, {
     intervals: nextIntervals,
     favoritePairs: nextFavorites,
+    defaultLeverage: nextLeverage,
+    defaultRrRatio: nextRrRatio,
   });
 
   return NextResponse.json({
@@ -110,6 +125,8 @@ export async function PATCH(req: Request) {
     preferences: {
       intervals: saved.intervals,
       favoritePairs: saved.favoritePairs,
+      defaultLeverage: saved.defaultLeverage,
+      defaultRrRatio: saved.defaultRrRatio,
       updatedAt: saved.updatedAt,
     },
   });

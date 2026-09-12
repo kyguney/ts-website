@@ -9,6 +9,24 @@ import type { StoredAnalysis } from "@/lib/ai/store";
 import type { MarketTick } from "@/lib/market/redis-pipeline";
 import type { Interval } from "@/lib/market/types";
 
+/**
+ * Per-user USD envelope attached to a feed row (from /api/analysis/feed). All
+ * amounts are sized from the caller's leverage / R:R / tier balance. Optional
+ * on the row because the Free reduced set and live-socket merges may omit it.
+ */
+export interface RowUsd {
+  entryZone: [number, number];
+  stopLossPrice: number;
+  tp1Price: number;
+  tp2Price: number;
+  stopLossUsd: number;
+  tp1Usd: number;
+  tp2Usd: number;
+  leverage: number;
+  rrRatio: string;
+  balanceUsd: number;
+}
+
 export interface SignalRow {
   symbol: string;
   interval: Interval;
@@ -27,10 +45,12 @@ export interface SignalRow {
   isFavorite?: boolean;
   /** For Free view: rows beyond the top broadcast pick are obscured. */
   obscured?: boolean;
+  /** Per-user USD TP/SL envelope (from the feed), when available. */
+  usd?: RowUsd | null;
 }
 
 export interface LiveSignalsTableProps {
-  plan: "free" | "pro";
+  plan: "free" | "pro" | "ultimate";
   rows: SignalRow[];
   /** Live ticks keyed by `ticker:SYMBOL:INTERVAL`. */
   latestTicks: Record<string, MarketTick>;

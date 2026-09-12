@@ -17,9 +17,15 @@ import {
 /** Default preferences for users without a stored row (matches schema default). */
 export const DEFAULT_INTERVALS: SelectableInterval[] = ["15m"];
 
+/** Risk-parameter defaults (match the Prisma schema `@default` values). */
+export const DEFAULT_LEVERAGE = 10;
+export const DEFAULT_RR_RATIO = "1:2";
+
 export interface ResolvedPreferences {
   intervals: SelectableInterval[];
   favoritePairs: string[];
+  defaultLeverage: number;
+  defaultRrRatio: string;
 }
 
 /** Narrows arbitrary stored strings back to the known selectable interval set. */
@@ -37,11 +43,18 @@ export async function getUserPreferences(
 ): Promise<ResolvedPreferences> {
   const row = await prisma.userPreference.findUnique({ where: { userId } });
   if (!row) {
-    return { intervals: [...DEFAULT_INTERVALS], favoritePairs: [] };
+    return {
+      intervals: [...DEFAULT_INTERVALS],
+      favoritePairs: [],
+      defaultLeverage: DEFAULT_LEVERAGE,
+      defaultRrRatio: DEFAULT_RR_RATIO,
+    };
   }
   return {
     intervals: coerceIntervals(row.intervals),
     favoritePairs: row.favoritePairs,
+    defaultLeverage: row.defaultLeverage,
+    defaultRrRatio: row.defaultRrRatio,
   };
 }
 
@@ -73,12 +86,32 @@ export async function getAllFavoritePairs(): Promise<string[]> {
  */
 export async function upsertUserPreferences(
   userId: string,
-  data: { intervals: SelectableInterval[]; favoritePairs?: string[] },
+  data: {
+    intervals: SelectableInterval[];
+    favoritePairs?: string[];
+    defaultLeverage?: number;
+    defaultRrRatio?: string;
+  },
 ): Promise<UserPreference> {
   const favoritePairs = data.favoritePairs ?? [];
+  // Risk params fall back to the schema defaults on create; on update they are
+  // only written when the caller supplies them (undefined is a no-op in Prisma).
+  const defaultLeverage = data.defaultLeverage ?? DEFAULT_LEVERAGE;
+  const defaultRrRatio = data.defaultRrRatio ?? DEFAULT_RR_RATIO;
   return prisma.userPreference.upsert({
     where: { userId },
-    create: { userId, intervals: data.intervals, favoritePairs },
-    update: { intervals: data.intervals, favoritePairs },
+    create: {
+      userId,
+      intervals: data.intervals,
+      favoritePairs,
+      defaultLeverage,
+      defaultRrRatio,
+    },
+    update: {
+      intervals: data.intervals,
+      favoritePairs,
+      defaultLeverage: data.defaultLeverage,
+      defaultRrRatio: data.defaultRrRatio,
+    },
   });
 }

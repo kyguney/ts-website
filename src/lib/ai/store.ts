@@ -40,8 +40,14 @@ export interface StoredAnalysis {
   price: number;
   ai: AIAnalysisOutput;
   riskRewardRatio: string;
-  /** Provenance so the UI can badge rule-based vs LLM results. */
-  source: "llm" | "fallback";
+  /**
+   * Provenance so the UI can badge results:
+   *   • "llm"      — live LLM response.
+   *   • "fallback" — deterministic rule-based analysis.
+   *   • "degraded" — prior cached rationale reused (numeric fields refreshed
+   *     because the LLM missed the per-tick budget).
+   */
+  source: "llm" | "fallback" | "degraded";
   model: string;
   generatedAt: number;
 }

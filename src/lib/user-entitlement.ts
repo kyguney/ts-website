@@ -5,7 +5,7 @@ import type {
 } from "@freemius/sdk";
 import type { UserFsEntitlement } from "@prisma/client";
 
-import { getFreemius, PRO_PRICING_ID } from "./freemius";
+import { getFreemius, PRO_PRICING_ID, ULTIMATE_PRICING_ID } from "./freemius";
 import { prisma } from "./prisma";
 import { auth } from "@/auth";
 
@@ -84,16 +84,40 @@ export async function deleteEntitlement(fsLicenseId: string): Promise<void> {
     });
 }
 
-export type UserPlan = "free" | "pro";
+export type UserPlan = "free" | "pro" | "ultimate";
 
 /**
- * Resolve the current user's plan for feature gating.
- * Everyone is "free" by default; an active Pro entitlement unlocks "pro".
+ * Pure plan-resolution logic: map an already-resolved active entitlement to a
+ * plan tier. Extracted from {@link getUserPlan} so the mapping (which is the
+ * only non-trivial branch) can be unit-tested without touching Prisma/Freemius.
+ *
+ * Everyone is "free" by default; an Ultimate entitlement unlocks "ultimate",
+ * otherwise a Pro entitlement unlocks "pro". Ultimate is checked first so a
+ * user holding both entitlements resolves to Ultimate (Req 1.1–1.3).
+ *
+ * @param entitlement The user's active entitlement, or null if none.
  */
-export async function getUserPlan(userId: string): Promise<UserPlan> {
-  const entitlement = await getUserEntitlement(userId);
-  if (entitlement && entitlement.fsPricingId === PRO_PRICING_ID) {
+export function resolvePlanFromEntitlement(
+  entitlement: Pick<UserFsEntitlement, "fsPricingId"> | null
+): UserPlan {
+  if (!entitlement) {
+    return "free";
+  }
+  if (entitlement.fsPricingId === ULTIMATE_PRICING_ID) {
+    return "ultimate";
+  }
+  if (entitlement.fsPricingId === PRO_PRICING_ID) {
     return "pro";
   }
   return "free";
+}
+
+/**
+ * Resolve the current user's plan for feature gating. Delegates the mapping to
+ * the pure {@link resolvePlanFromEntitlement} helper after fetching the active
+ * entitlement.
+ */
+export async function getUserPlan(userId: string): Promise<UserPlan> {
+  const entitlement = await getUserEntitlement(userId);
+  return resolvePlanFromEntitlement(entitlement);
 }

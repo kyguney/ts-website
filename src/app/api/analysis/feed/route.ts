@@ -1,74 +1,91 @@
 // ---------------------------------------------------------------------------
-// GET /api/analysis/feed — tiered AI analysis feed (Phase 3).
+// GET /api/analysis/feed — tiered AI analysis feed (Phase 6, tier-slice read path).
 //
-//   FREE users: receive ONLY the shared 15m broadcast payload
-//     (analysis:broadcast:free:15m), plus locked placeholder rows for the
-//     Pro-only timeframes with an upgrade CTA. Zero on-demand LLM calls.
+//   The 1m background scanner is now the single source of truth. It writes a
+//   per-tier slice for every tracked symbol to Redis (`scan:{tier}:{symbol}:latest`)
+//   with the tier's cadence baked in (ultimate=1m, pro=5m, free=15m). This route
+//   reads ONLY the caller's tier slice via `readTierSlices` — no per-user
+//   recompute of the signal happens here (Req 3.3).
 //
-//   PRO users: receive the active AI analyses matching their selected
-//     timeframes (from their UserPreference), read from Redis.
+//   USD TP1/TP2/SL are the ONLY per-user numbers, and they are computed at read
+//   time from the caller's risk profile (`default_leverage`, `default_rr_ratio`)
+//   and their tier's demo balance (Req 3.3 / 7.1 / 7.2). The cached slice stays
+//   user-agnostic (prices + candidate `atrRatioPct`); the USD amounts are layered
+//   on here.
+//
+//   FREE  — 15m reduced slices (single TP), favorites pinned, plus locked
+//           placeholder rows for the Pro-only timeframes with an upgrade CTA.
+//   PRO   — 5m full-ladder slices across the tracked universe.
+//   ULTIMATE — 1m full-ladder slices; the dashboard renders the 1m timeframe.
+//
+// --- Symbol-list sourcing decision -----------------------------------------
+//   The tier `:latest` pointers are keyed by symbol, so a read needs the symbol
+//   list up front. We build it from the SAME source the worker uses to write
+//   the slices: `resolveTrackedSymbols()` (top-movers UNION regime symbols)
+//   UNION the caller's favorites. We then MGET every tier `:latest` key in one
+//   round-trip via `readTierSlices`. This deliberately avoids a Redis `SCAN` on
+//   every request (unlike the legacy `readProAnalysesByIntervals` path) and
+//   guarantees favorites are included even if they've dropped out of the
+//   top-movers universe.
 // ---------------------------------------------------------------------------
 
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { getUserPlan } from "@/lib/user-entitlement";
+import { getUserPlan, type UserPlan } from "@/lib/user-entitlement";
 import { getUserPreferences } from "@/lib/user-preferences";
+import { readScanTimes } from "@/lib/market/redis-pipeline";
+import { resolveTrackedSymbols } from "@/lib/market/config";
 import {
-  readFreeBroadcast,
-  readProAnalysesByIntervals,
-  type StoredAnalysis,
-} from "@/lib/ai/store";
-import { readSnapshot, readScanTimes } from "@/lib/market/redis-pipeline";
-import { INTERVALS, type Interval } from "@/lib/market/types";
-import { SELECTABLE_INTERVALS } from "@/lib/validation";
+  readTierSlices,
+  type FreeTierSlice,
+  type FullTierSlice,
+} from "@/lib/market/tier-cache";
+import { parseRrRatio } from "@/lib/ai/risk";
+import { demoBalanceForTier } from "@/lib/ai/balances";
+import {
+  freeSliceToRow,
+  fullSliceToRow,
+  type RiskProfile,
+} from "@/lib/ai/feed-usd";
+import { SELECTABLE_INTERVALS, type SelectableInterval } from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Timeframes shown as locked placeholders to Free users (everything but 15m). */
-const FREE_LOCKED_INTERVALS = SELECTABLE_INTERVALS.filter((i) => i !== "15m");
+/** The slice interval each tier reads from (Ultimate exposes 1m). */
+const TIER_INTERVAL: Record<UserPlan, "1m" | "5m" | "15m"> = {
+  ultimate: "1m",
+  pro: "5m",
+  free: "15m",
+};
 
 /**
- * Builds a lightweight StoredAnalysis-shaped row from a live snapshot for a
- * favorited symbol (Free tier). Free favorites are scanned but don't get an AI
- * pass, so we synthesize a minimal deterministic `ai` block from the candidate
- * so the table/drawer render consistently.
+ * Timeframes shown as locked placeholders to Free users (everything but 15m).
+ * Preserves the existing Free "blurred upgrade CTA" behaviour.
  */
-async function favoriteRowFromSnapshot(
-  symbol: string,
-  interval: Interval,
-): Promise<StoredAnalysis | null> {
-  const snap = await readSnapshot(symbol, interval);
-  if (!snap) return null;
-  const c = snap.candidate;
-  const price = snap.indicators.price;
-  // Prefer the scored candidate; otherwise emit a neutral placeholder row.
-  const direction = c?.direction ?? "LONG";
-  return {
-    symbol,
-    interval,
-    direction,
-    pattern: c?.patternType ?? "Watching",
-    score: c?.score ?? 0,
-    price,
-    ai: {
-      sentiment:
-        direction === "LONG" ? "BULLISH" : direction === "SHORT" ? "BEARISH" : "NEUTRAL",
-      summary: c
-        ? `${symbol} ${interval}: ${c.patternType} (${c.statusLabel}). Favorite — upgrade to Pro for full AI entry/SL/TP.`
-        : `${symbol} ${interval}: no qualifying setup right now. Tracked as a favorite.`,
-      entryRange: [price, price],
-      stopLoss: price,
-      takeProfitLevels: [price],
-      riskLevel: "MEDIUM",
-      keyFactors: ["Favorite"],
-    },
-    riskRewardRatio: "n/a",
-    source: "fallback",
-    model: "favorite-watch",
-    generatedAt: snap.updatedAt,
-  };
+const FREE_LOCKED_INTERVALS: SelectableInterval[] = SELECTABLE_INTERVALS.filter(
+  (i) => i !== "15m",
+);
+
+// The per-user USD envelope + slice→row mapping helpers (RowUsdLevels, FeedRow,
+// RiskProfile, usdForSlice, fullSliceToRow, freeSliceToRow) live in
+// `@/lib/ai/feed-usd` so they are importable (Next.js route files may only
+// export handlers + config fields) and reusable by the E2E acceptance test.
+
+/** Builds the symbol list for a read: tracked universe UNION caller favorites. */
+async function resolveFeedSymbols(favoritePairs: string[]): Promise<string[]> {
+  let tracked: string[] = [];
+  try {
+    tracked = await resolveTrackedSymbols();
+  } catch {
+    // Discovery failure is non-fatal — fall back to favorites only.
+    tracked = [];
+  }
+  const set = new Set<string>();
+  for (const s of tracked) set.add(s.toUpperCase());
+  for (const s of favoritePairs) set.add(s.toUpperCase());
+  return Array.from(set);
 }
 
 export async function GET() {
@@ -82,87 +99,95 @@ export async function GET() {
     );
   }
 
-  const plan = await getUserPlan(userId);
+  const [plan, prefs] = await Promise.all([
+    getUserPlan(userId),
+    getUserPreferences(userId),
+  ]);
+
+  // Resolve the caller's risk profile once — every row is sized against it.
+  const profile: RiskProfile = {
+    leverage: prefs.defaultLeverage,
+    rrReward: parseRrRatio(prefs.defaultRrRatio),
+    rrRatio: prefs.defaultRrRatio,
+    balanceUsd: demoBalanceForTier(plan),
+  };
+
+  const symbols = await resolveFeedSymbols(prefs.favoritePairs);
+  const favoriteSet = new Set(prefs.favoritePairs.map((s) => s.toUpperCase()));
 
   // --- FREE tier -----------------------------------------------------------
   if (plan === "free") {
-    const [broadcast, prefs] = await Promise.all([
-      readFreeBroadcast(),
-      getUserPreferences(userId),
-    ]);
+    const slices = (await readTierSlices("free", symbols)) as FreeTierSlice[];
+    const rows = slices.map((slice) => freeSliceToRow(slice, profile));
 
-    // Free favorites (max 3, enforced at the API): scanned on 15m and pinned
-    // to the TOP of the list, ahead of the shared broadcast picks.
-    const favoritePairs = prefs.favoritePairs.slice(0, 3);
-    const favoriteRows: StoredAnalysis[] = [];
-    for (const symbol of favoritePairs) {
-      const row = await favoriteRowFromSnapshot(symbol, "15m");
-      if (row) favoriteRows.push(row);
-    }
-    // Highest-scoring favorite first.
-    favoriteRows.sort((a, b) => b.score - a.score);
+    // Favorites pinned first, then by score.
+    const sorted = rows.sort((a, b) => {
+      const aFav = favoriteSet.has(a.symbol.toUpperCase()) ? 1 : 0;
+      const bFav = favoriteSet.has(b.symbol.toUpperCase()) ? 1 : 0;
+      if (aFav !== bFav) return bFav - aFav;
+      return b.score - a.score;
+    });
+
+    const favorites = sorted.filter((r) => favoriteSet.has(r.symbol.toUpperCase()));
 
     const scanTimes = await readScanTimes();
     return NextResponse.json({
       ok: true,
       plan: "free",
-      broadcast, // may be null if not generated yet (worker warming up)
+      interval: TIER_INTERVAL.free,
+      profile: {
+        defaultLeverage: profile.leverage,
+        defaultRrRatio: profile.rrRatio,
+        balanceUsd: profile.balanceUsd,
+      },
       scanTimes,
-      favoritePairs,
-      // Favorite rows are surfaced separately so the client can pin them first.
-      favorites: favoriteRows,
+      favoritePairs: prefs.favoritePairs.slice(0, 3),
+      // Favorite rows surfaced separately so the client can pin them first.
+      favorites,
       // Locked rows drive the dashboard's blurred upgrade CTA.
       lockedTimeframes: FREE_LOCKED_INTERVALS.map((interval) => ({
         interval,
         locked: true,
         upgradeCta: "Upgrade to Pro to unlock this timeframe.",
       })),
-      analyses: [], // Free users get no per-symbol Pro analyses.
+      analyses: sorted,
     });
   }
 
-  // --- PRO tier ------------------------------------------------------------
-  const prefs = await getUserPreferences(userId);
+  // --- PRO / ULTIMATE tiers -----------------------------------------------
+  const tierSlices = (await readTierSlices(plan, symbols)) as FullTierSlice[];
+  const rows = tierSlices.map((slice) => fullSliceToRow(slice, profile));
 
-  // Intersect the user's selected intervals with those the engine actually
-  // produces. The worker now streams all four supported timeframes
-  // (5m/15m/30m/1h), so Pro users can fully consume 30m live feeds. Any
-  // future picks outside the engine set are still surfaced separately so the
-  // UI can indicate "coming soon" rather than silently dropping them.
-  const engineIntervals = new Set<Interval>(INTERVALS);
-  const activeIntervals = prefs.intervals.filter((i): i is Interval =>
-    engineIntervals.has(i as Interval),
-  );
-  const unavailableIntervals = prefs.intervals.filter(
-    (i) => !engineIntervals.has(i as Interval),
-  );
-
-  // Pro sees the FULL top-movers universe across ALL engine timeframes — the
-  // client filters to the selected pill locally, so switching timeframes is
-  // instant and never races the preference PATCH. Favorites are pinned to the
-  // top instead of narrowing the list.
-  const analyses = await readProAnalysesByIntervals([...INTERVALS]);
-
-  // Pin favorites first (favorites capped at 10, enforced at the API), each
-  // group sorted by score; non-favorites follow, sorted by score.
-  const favoriteSet = new Set(prefs.favoritePairs.map((s) => s.toUpperCase()));
-  const sorted = [...analyses].sort((a, b) => {
+  // Pin favorites first (each group by score); non-favorites follow by score.
+  const sorted = rows.sort((a, b) => {
     const aFav = favoriteSet.has(a.symbol.toUpperCase()) ? 1 : 0;
     const bFav = favoriteSet.has(b.symbol.toUpperCase()) ? 1 : 0;
-    if (aFav !== bFav) return bFav - aFav; // favorites first
-    return b.score - a.score; // then by score
+    if (aFav !== bFav) return bFav - aFav;
+    return b.score - a.score;
   });
+
+  // The single interval this tier reads (5m for Pro, 1m for Ultimate). Kept as
+  // an array for backward-compatibility with the previous `activeIntervals`
+  // multi-select shape the dashboard consumes.
+  const tierInterval = TIER_INTERVAL[plan];
 
   const scanTimes = await readScanTimes();
   return NextResponse.json({
     ok: true,
-    plan: "pro",
+    plan,
+    interval: tierInterval,
     preferences: {
       intervals: prefs.intervals,
       favoritePairs: prefs.favoritePairs,
     },
-    activeIntervals,
-    unavailableIntervals,
+    profile: {
+      defaultLeverage: profile.leverage,
+      defaultRrRatio: profile.rrRatio,
+      balanceUsd: profile.balanceUsd,
+    },
+    // Backward-compat: the dashboard filters rows by `active` interval. The
+    // tier's slice interval is the only one served now, so expose it here.
+    activeIntervals: [tierInterval],
     scanTimes,
     analyses: sorted,
   });

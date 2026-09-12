@@ -27,12 +27,18 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {plan === "pro" ? "Pro signals" : "Your signals"}
+            {plan === "ultimate"
+              ? "Ultimate signals"
+              : plan === "pro"
+                ? "Pro signals"
+                : "Your signals"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {plan === "pro"
-              ? "Real-time long/short scores across the full market."
-              : "Free plan — top majors, delayed. Upgrade for the full market in real time."}
+            {plan === "ultimate"
+              ? "Fastest 1m cadence — real-time long/short scores across the full market."
+              : plan === "pro"
+                ? "Real-time long/short scores across the full market."
+                : "Free plan — top majors, delayed. Upgrade for the full market in real time."}
           </p>
         </div>
         {plan === "free" && (
@@ -61,8 +67,12 @@ export default async function DashboardPage() {
 
       <DashboardLive
         plan={plan}
+        email={session.user.email ?? ""}
+        name={session.user.name}
         initialIntervals={preferences.intervals}
         initialFavorites={preferences.favoritePairs}
+        initialLeverage={preferences.defaultLeverage}
+        initialRrRatio={preferences.defaultRrRatio}
       />
 
       <p className="text-xs text-muted-foreground">

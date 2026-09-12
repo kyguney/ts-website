@@ -10,8 +10,8 @@ const PLANS = [
     cadence: "forever",
     description: "Get started with core signals.",
     features: [
-      "Delayed long/short signals",
-      "Top 5 majors coverage",
+      "Delayed 15m long/short signals",
+      "Top majors coverage",
       "Daily market regime summary",
       "Community access",
     ],
@@ -25,7 +25,7 @@ const PLANS = [
     cadence: "per month",
     description: "Real-time edge across the full market.",
     features: [
-      "Real-time long/short signals",
+      "Real-time 5m long/short signals",
       "Full market scanner (all symbols)",
       "Momentum & volatility spike alerts",
       "Advanced regime detection",
@@ -35,19 +35,36 @@ const PLANS = [
     href: "/register",
     highlighted: true,
   },
+  {
+    name: "Ultimate",
+    price: "$99",
+    cadence: "per month",
+    description: "The fastest cadence and the full feature set.",
+    features: [
+      "Fastest 1m signal cadence",
+      "Everything in Pro",
+      "USD-denominated TP/SL from your risk profile",
+      "Full TP ladder on every signal",
+      "Highest tier priority support",
+    ],
+    cta: "Get Ultimate",
+    href: "/register",
+    highlighted: false,
+  },
 ];
 
 export function Pricing() {
   return (
-    <section id="pricing" className="mx-auto w-full max-w-4xl px-4 py-20">
+    <section id="pricing" className="mx-auto w-full max-w-6xl px-4 py-20">
       <div className="mb-10 text-center">
         <h2 className="text-3xl font-bold tracking-tight">Simple pricing</h2>
         <p className="mt-2 text-muted-foreground">
-          Start free. Upgrade to Pro when you want the real-time edge.
+          Start free. Upgrade to Pro for the real-time edge, or Ultimate for the
+          fastest 1m cadence.
         </p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {PLANS.map((plan) => (
           <div
             key={plan.name}

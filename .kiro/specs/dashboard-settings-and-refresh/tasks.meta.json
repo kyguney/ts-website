@@ -1,0 +1,210 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Create the shared helpers module": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072305222
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072312015
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072414215
+      }
+    ],
+    "1.2 Fix the dashboard layout plan badge": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072305267
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072314893
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072417045
+      }
+    ],
+    "2.1 Implement `UserMenu`": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072305443
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072420979
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072491476
+      }
+    ],
+    "3.1 Derive the served interval and remove the timeframe selector usage": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072305476
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072495222
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072628038
+      }
+    ],
+    "3.2 Mount `UserMenu` in the header row (Concern C, Option 1)": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072305504
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072631922
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072749400
+      }
+    ],
+    "3.3 Add the auto-refresh mechanism (Concern A)": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072305537
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072753672
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072823267
+      }
+    ],
+    "4.1 Remove the dead selector file": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072305569
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072826442
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072890317
+      }
+    ],
+    "5. Checkpoint — build and typecheck": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072305600
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072901577
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072961690
+      }
+    ],
+    "6.1 Add unit tests for the extracted helpers": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072305635
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072965433
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789073044572
+      }
+    ],
+    "6.2 Final verification": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072305680
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789073047859
+      },
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789073139171
+      }
+    ],
+    "1. Extract pure helpers and fix the layout badge (foundation)": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072417073
+      }
+    ],
+    "2. Build the new `UserMenu` client component": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072491639
+      }
+    ],
+    "3. Rewire `DashboardLive` and mount the menu + auto-refresh": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072823301
+      }
+    ],
+    "4. Delete the timeframe selector": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789072890502
+      }
+    ],
+    "6. Tests and verification": [
+      {
+        "executionId": "c5d517ea-dbcc-4907-aaf0-034a01e3570d",
+        "chatSessionId": "sess_4b619099-7d55-42eb-aaeb-a9dac8660dd0",
+        "timestamp": 1789073139203
+      }
+    ]
+  }
+}

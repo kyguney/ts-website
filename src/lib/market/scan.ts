@@ -30,6 +30,7 @@ import {
   type ScanStatus,
 } from "@/lib/market/redis-pipeline";
 import { generateProAnalysis, PRO_SCORE_THRESHOLD } from "@/lib/ai/orchestrator";
+import { writeTierSlicesForScan } from "@/lib/market/tier-slicer";
 import type {
   AnalysisCandidate,
   Interval,
@@ -255,6 +256,23 @@ export async function scanMarket(options: ScanOptions = {}): Promise<ScanResult>
 
   // Manual scans: wait for AI analyses to finish so the caller reads them.
   if (proJobs.length) await Promise.all(proJobs);
+
+  // Tier slicing (design C3): the 1m scan is the single source of truth for all
+  // tiers. Only run this on the 1m pass — derive ultimate (raw 1m), pro
+  // (resampled 5m), and free (resampled 15m, reduced) slices from each scanned
+  // symbol's 1m window and persist them via `writeTierSlices`. Wrapped so a
+  // slicing failure never breaks the scan.
+  if (intervals.includes("1m")) {
+    try {
+      await writeTierSlicesForScan({
+        symbols,
+        tickers,
+        regime,
+      });
+    } catch {
+      // Slicing is best-effort; never let it break the scan pass.
+    }
+  }
 
   candidates.sort((a, b) => b.score - a.score);
   const finishedAt = Date.now();

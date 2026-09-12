@@ -11,11 +11,22 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { StoredAnalysis } from "@/lib/ai/store";
+import type { RowUsd } from "@/components/dashboard/live-signals-table";
 
 export interface AiAnalysisDrawerProps {
   analysis: StoredAnalysis | null;
+  /** Per-user USD TP/SL envelope for the selected row, when available. */
+  usd?: RowUsd | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+function fmtUsd(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  return `$${n.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 function fmtPrice(n: number): string {
@@ -61,6 +72,7 @@ const RISK_STYLES: Record<StoredAnalysis["ai"]["riskLevel"], string> = {
  */
 export function AiAnalysisDrawer({
   analysis,
+  usd,
   open,
   onOpenChange,
 }: AiAnalysisDrawerProps) {
@@ -151,6 +163,24 @@ export function AiAnalysisDrawer({
             tone="up"
           />
         </div>
+
+        {/* Per-user USD TP/SL — sized from the caller's leverage / R:R / tier
+            balance (Req 7.1). Only shown when the feed supplied the envelope. */}
+        {usd && (
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+            <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
+              <span>USD outcome</span>
+              <span className="normal-case">
+                {usd.leverage}x · {usd.rrRatio} · {fmtUsd(usd.balanceUsd)} base
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <LevelCard label="Stop-loss" value={fmtUsd(usd.stopLossUsd)} tone="down" />
+              <LevelCard label="TP1" value={fmtUsd(usd.tp1Usd)} tone="up" />
+              <LevelCard label="TP2" value={fmtUsd(usd.tp2Usd)} tone="up" />
+            </div>
+          </div>
+        )}
 
         {/* R:R + score */}
         <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3">

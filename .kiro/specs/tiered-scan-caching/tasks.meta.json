@@ -1,0 +1,323 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Add the Ultimate tier to the entitlement/plan model": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588117
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060596326
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060744420
+      }
+    ],
+    "2. Widen the WS protocol plan/authorization for Ultimate + 1m": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588152
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060747457
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060858406
+      }
+    ],
+    "3. Add the 1m interval to the engine interval set": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588334
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060861355
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060920405
+      }
+    ],
+    "4. Add `default_leverage` / `default_rr_ratio` to the data model": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588368
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060923402
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060993452
+      }
+    ],
+    "5. Read/write + validate the new profile fields": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588403
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060997578
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061152446
+      }
+    ],
+    "6. Implement deterministic risk math": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588439
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061155361
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061257270
+      }
+    ],
+    "7. Replace hard-coded TP/SL constants": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588485
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061260259
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061368589
+      }
+    ],
+    "8. Implement resampling": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588520
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061371571
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061421431
+      }
+    ],
+    "9. Implement the tier cache layer": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588554
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061424385
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061527798
+      }
+    ],
+    "10. Wire the 1m scan into the worker with a distributed lock": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588587
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061532183
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061636181
+      }
+    ],
+    "11. Produce and persist tier slices from the 1m scan": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588619
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061639311
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061801656
+      }
+    ],
+    "12. Bound AI dispatch and add the degraded path": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588652
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061804723
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061936056
+      }
+    ],
+    "13. Serve tier slices with per-user USD TP/SL": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588683
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789061939372
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789062164704
+      }
+    ],
+    "14. Remove the Pro manual scan": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588716
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789062167765
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789065735621
+      }
+    ],
+    "15. Ultimate in the dashboard + pricing page": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588750
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789065739024
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789066123445
+      }
+    ],
+    "16. Unit tests": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588778
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789066294171
+      }
+    ],
+    "17. Integration tests": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588812
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789066297222
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789066769609
+      }
+    ],
+    "18. E2E acceptance test": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588844
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789066772850
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789067098313
+      }
+    ],
+    "19. Full verification": [
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789060588884
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789067101771
+      },
+      {
+        "executionId": "c09c9383-8bf6-4efd-805f-ea65d4f10230",
+        "chatSessionId": "sess_a7b527c7-7b7d-4045-a884-95c3b3277005",
+        "timestamp": 1789067216413
+      }
+    ]
+  }
+}

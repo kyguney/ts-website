@@ -41,12 +41,14 @@ export default async function DashboardLayout({
             <span
               className={cn(
                 "rounded-full px-2.5 py-1 text-xs font-semibold",
-                plan === "pro"
-                  ? "bg-primary/15 text-primary"
-                  : "bg-white/10 text-muted-foreground"
+                plan === "ultimate"
+                  ? "bg-amber-400/15 text-amber-400"
+                  : plan === "pro"
+                    ? "bg-primary/15 text-primary"
+                    : "bg-white/10 text-muted-foreground"
               )}
             >
-              {plan === "pro" ? "PRO" : "FREE"}
+              {plan === "ultimate" ? "ULTIMATE" : plan === "pro" ? "PRO" : "FREE"}
             </span>
             <span className="hidden text-sm text-muted-foreground sm:inline">
               {session.user.email}

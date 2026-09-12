@@ -1,5 +1,6 @@
 import ChartBackground from "@/components/ChartBackground";
 import WaitlistForm from "@/components/WaitlistForm";
+import { BrandLogo } from "@/components/brand-logo";
 
 const FEATURES = [
   {
@@ -34,29 +35,7 @@ export default function ComingSoon() {
 
       <main className="wrap">
         <header className="nav">
-          <a className="brand" href="/">
-            <span className="brand__mark" aria-hidden="true">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M3 16.5L9 10.5L13 14.5L21 6.5"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M15 6.5H21V12.5"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <span className="brand__name">
-              TrendScore<span className="brand__dot">.io</span>
-            </span>
-          </a>
+          <BrandLogo href="/" height={112} priority />
           <span className="badge">Coming Soon</span>
         </header>
 

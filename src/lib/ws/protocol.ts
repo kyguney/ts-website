@@ -6,7 +6,18 @@
 
 import type { Interval } from "@/lib/market/types";
 
-export type Plan = "free" | "pro";
+export type Plan = "free" | "pro" | "ultimate";
+
+/**
+ * WS-visible interval set. Ultimate adds the 1m cadence on top of the engine's
+ * base intervals. Kept as a local widening so this module type-checks whether or
+ * not `Interval` already carries "1m" (added to the engine set in a later task);
+ * once "1m" is part of `Interval`, this collapses to `Interval`.
+ */
+export type WsInterval = Interval | "1m";
+
+/** Ultimate-only fastest cadence. */
+export const ULTIMATE_INTERVAL: WsInterval = "1m";
 
 /** Intervals a Free user is allowed to consume live. Only 15m. */
 export const FREE_INTERVAL: Interval = "15m";
@@ -45,7 +56,7 @@ export interface WelcomeMessage {
   plan: Plan;
   userId: string | null;
   /** Channels the connection is allowed to subscribe to given its plan. */
-  allowedIntervals: Interval[];
+  allowedIntervals: WsInterval[];
 }
 
 export interface SubscribedMessage {
@@ -150,10 +161,10 @@ export interface ParsedChannel {
     | "scan:status"
     | "unknown";
   symbol?: string;
-  interval?: Interval;
+  interval?: WsInterval;
 }
 
-const SUPPORTED_INTERVALS = new Set<string>(["5m", "15m", "30m", "1h"]);
+const SUPPORTED_INTERVALS = new Set<string>(["1m", "5m", "15m", "30m", "1h"]);
 
 /** Parses a client-facing channel string into a structured descriptor. */
 export function parseChannel(channel: string): ParsedChannel {
@@ -168,7 +179,7 @@ export function parseChannel(channel: string): ParsedChannel {
       return {
         kind: prefix as "ticker" | "candles",
         symbol: symbol.toUpperCase(),
-        interval: interval as Interval,
+        interval: interval as WsInterval,
       };
     }
   }
@@ -185,10 +196,11 @@ export interface AuthorizeResult {
 
 /**
  * Central plan-based channel authorization. This is the single source of truth
- * for Free vs Pro gating and is used by the gateway on every subscribe.
+ * for tier gating and is used by the gateway on every subscribe.
  *
- *   FREE: only 15m ticker/candle channels + the public `signals:free` channel.
- *   PRO:  any symbol, any interval (5m/15m/30m/1h), live AI `signals`.
+ *   FREE:     only 15m ticker/candle channels + the public `signals:free` channel.
+ *   PRO:      5m/15m/30m/1h ticker/candle channels, live AI `signals`.
+ *   ULTIMATE: everything Pro can, plus the 1m cadence.
  */
 export function authorizeChannel(plan: Plan, channel: string): AuthorizeResult {
   const parsed = parseChannel(channel);
@@ -199,17 +211,17 @@ export function authorizeChannel(plan: Plan, channel: string): AuthorizeResult {
 
     case "signals:free":
     case "scan:status":
-      return { ok: true }; // public — both tiers
+      return { ok: true }; // public — all tiers
 
     case "signals":
-      // Live Pro AI analysis stream.
-      return plan === "pro" ? { ok: true } : { ok: false, error: "UPGRADE_REQUIRED" };
+      // Live AI analysis stream — Pro and Ultimate.
+      return plan === "pro" || plan === "ultimate"
+        ? { ok: true }
+        : { ok: false, error: "UPGRADE_REQUIRED" };
 
     case "ticker":
     case "candles":
-      if (plan === "pro") return { ok: true };
-      // Free tier is pinned to 15m only.
-      return parsed.interval === FREE_INTERVAL
+      return allowedIntervalsForPlan(plan).includes(parsed.interval as WsInterval)
         ? { ok: true }
         : { ok: false, error: "UPGRADE_REQUIRED" };
 
@@ -219,6 +231,13 @@ export function authorizeChannel(plan: Plan, channel: string): AuthorizeResult {
 }
 
 /** Intervals the given plan may subscribe to (drives the welcome payload). */
-export function allowedIntervalsForPlan(plan: Plan): Interval[] {
-  return plan === "pro" ? ["5m", "15m", "30m", "1h"] : [FREE_INTERVAL];
+export function allowedIntervalsForPlan(plan: Plan): WsInterval[] {
+  switch (plan) {
+    case "ultimate":
+      return [ULTIMATE_INTERVAL, "5m", "15m", "30m", "1h"];
+    case "pro":
+      return ["5m", "15m", "30m", "1h"];
+    default:
+      return [FREE_INTERVAL];
+  }
 }

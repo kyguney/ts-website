@@ -8,7 +8,7 @@
 //   • Listens on PORT (default 3001).
 //   • Verifies the NextAuth session JWT (NEXTAUTH_SECRET) to resolve userId,
 //     falling back to an ANONYMOUS / FREE identity when absent/invalid.
-//   • Resolves plan (FREE | PRO) from the DB (Freemius entitlements).
+//   • Resolves plan (FREE | PRO | ULTIMATE) from the DB (Freemius entitlements).
 //   • Subscribes ONCE to Redis Pub/Sub (a single multiplexer) for:
 //       market:tick:*        (pattern) live candle ticks
 //       market:candle:closed           finalized candles

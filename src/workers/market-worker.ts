@@ -60,6 +60,17 @@ import {
 } from "@/lib/ai/orchestrator";
 import { scanMarket } from "@/lib/market/scan";
 import { getAllFavoritePairs } from "@/lib/user-preferences";
+import { redis } from "@/lib/redis";
+import { randomUUID } from "node:crypto";
+
+// --- 1m distributed lock ----------------------------------------------------
+// The 1m tick is the single source of truth for all tiers, so across replicas
+// only one instance should run a given tick. A short-TTL Redis lock guarantees
+// that: whoever wins the SET NX runs the pass; everyone else skips this tick
+// (the next tick retries). The 55s TTL is < the 60s cadence, so a crashed
+// holder self-heals before the next boundary.
+const SCAN_1M_LOCK_KEY = "scan:lock:1m";
+const SCAN_1M_LOCK_TTL_MS = 55_000;
 
 // --- Tunables ---------------------------------------------------------------
 const HEARTBEAT_INTERVAL_MS = 20_000; // send ping every 20s
@@ -72,6 +83,7 @@ const TICKER_REFRESH_MS = 30_000;
 const SIGNAL_MIN_SCORE = 200;
 // Candle length per interval, used to derive a timeframe-aligned scan cadence.
 const INTERVAL_MS: Record<Interval, number> = {
+  "1m": 60_000,
   "5m": 5 * 60_000,
   "15m": 15 * 60_000,
   "30m": 30 * 60_000,
@@ -336,13 +348,99 @@ class MarketWorker {
     scanIntervals: Interval[],
     aligned: boolean,
   ): Promise<void> {
+    // The 1m tier scan is the single source of truth for all tiers and must be
+    // guarded by a distributed lock so replicas don't double-scan. It is split
+    // out and run separately; the other intervals keep their existing behaviour
+    // (in-process overlap guard only).
+    const has1m = scanIntervals.includes("1m");
+    const otherIntervals = scanIntervals.filter((i) => i !== "1m");
+
+    if (otherIntervals.length > 0) {
+      await scanMarket({
+        symbols: this.symbols,
+        intervals: otherIntervals,
+        tickers: this.tickers,
+        regime: this.regime ?? undefined,
+        trigger: "interval",
+        everySec: Math.round(INTERVAL_MS[otherIntervals[0] ?? "5m"] / 1000),
+        dispatchProAnalysis: true,
+        recordTimes: aligned,
+        refreshViaRest: USE_REST_REFRESH,
+      });
+    }
+
+    if (has1m) {
+      await this.run1mScanPass(aligned);
+    }
+  }
+
+  /**
+   * Runs the 1m scan pass under a distributed Redis lock so that, across
+   * replicas, only one instance scans a given 1m tick. On failed acquisition
+   * (another replica holds the lock) this tick is skipped — the next tick
+   * retries, so a skipped/failed tick never blocks the following one. The whole
+   * body is wrapped so a failure is logged and never rethrown into the caller
+   * (which would otherwise stall the aligned re-scheduling loop).
+   */
+  private async run1mScanPass(aligned: boolean): Promise<void> {
+    // Single-instance dev (no Redis / no replicas): skip the lock and just run.
+    if (!redis) {
+      try {
+        await this.scan1m(aligned);
+      } catch (e) {
+        log(`1m scan pass error (no lock): ${errMsg(e)}`);
+      }
+      return;
+    }
+
+    const lockValue = randomUUID();
+    let acquired = false;
+    try {
+      const res = await redis.set(
+        SCAN_1M_LOCK_KEY,
+        lockValue,
+        "PX",
+        SCAN_1M_LOCK_TTL_MS,
+        "NX",
+      );
+      acquired = res === "OK";
+
+      if (!acquired) {
+        // Another replica is running this tick — skip; the next tick retries.
+        log("1m tick skipped: lock held by another instance.");
+        return;
+      }
+
+      await this.scan1m(aligned);
+    } catch (e) {
+      // Binance/engine/Redis errors must not break the next tick.
+      log(`1m scan pass error: ${errMsg(e)}`);
+    } finally {
+      // Release only if we still own the lock (value match), so we never delete
+      // a lock a later holder acquired after our TTL lapsed. Best-effort: the
+      // short TTL self-heals if this cleanup itself fails.
+      if (acquired && redis) {
+        try {
+          const current = await redis.get(SCAN_1M_LOCK_KEY);
+          if (current === lockValue) {
+            await redis.del(SCAN_1M_LOCK_KEY);
+          }
+        } catch (e) {
+          log(`1m lock release error: ${errMsg(e)}`);
+        }
+      }
+    }
+  }
+
+  /** The actual 1m scan work (no locking) — invoked by `run1mScanPass`. */
+  private async scan1m(aligned: boolean): Promise<void> {
     await scanMarket({
       symbols: this.symbols,
-      intervals: scanIntervals,
+      intervals: ["1m"],
       tickers: this.tickers,
       regime: this.regime ?? undefined,
       trigger: "interval",
-      everySec: Math.round(INTERVAL_MS[scanIntervals[0] ?? "5m"] / 1000),
+      everySec: Math.round(INTERVAL_MS["1m"] / 1000),
       dispatchProAnalysis: true,
       recordTimes: aligned,
       refreshViaRest: USE_REST_REFRESH,

@@ -86,55 +86,6 @@ export async function readScanTimes(): Promise<Record<string, number>> {
   return out;
 }
 
-/** Per-user manual scan history (Pro). Newest first, capped + TTL'd. */
-export function scanHistoryKey(userId: string): string {
-  return `analysis:scan:history:${userId}`;
-}
-
-const SCAN_HISTORY_MAX = 25;
-const SCAN_HISTORY_TTL_SEC = 7 * 24 * 60 * 60; // 7 days
-
-/** A saved manual-scan result the user can review later. */
-export interface ScanHistoryEntry {
-  id: string;
-  scannedAt: number;
-  trigger: "manual";
-  symbolsScanned: number;
-  combosScanned: number;
-  candidatesFound: number;
-  /** The analyses shown to the user at scan time (their active interval). */
-  analyses: import("@/lib/ai/store").StoredAnalysis[];
-}
-
-/** Pushes a manual scan result onto the user's history list (newest first). */
-export async function pushScanHistory(
-  userId: string,
-  entry: ScanHistoryEntry,
-): Promise<void> {
-  if (!redis) return;
-  const key = scanHistoryKey(userId);
-  await redis.lpush(key, JSON.stringify(entry));
-  await redis.ltrim(key, 0, SCAN_HISTORY_MAX - 1);
-  await redis.expire(key, SCAN_HISTORY_TTL_SEC);
-}
-
-/** Reads the user's manual scan history (newest first). */
-export async function readScanHistory(
-  userId: string,
-): Promise<ScanHistoryEntry[]> {
-  if (!redis) return [];
-  const raws = await redis.lrange(scanHistoryKey(userId), 0, SCAN_HISTORY_MAX - 1);
-  const out: ScanHistoryEntry[] = [];
-  for (const raw of raws) {
-    try {
-      out.push(JSON.parse(raw) as ScanHistoryEntry);
-    } catch {
-      // skip malformed
-    }
-  }
-  return out;
-}
-
 /** Publishes + caches the current scan status. */
 export async function publishScanStatus(status: ScanStatus): Promise<void> {
   if (!redis) return;

@@ -10,9 +10,9 @@ export type TrendState = "BULLISH" | "NEUTRAL" | "BEARISH";
 export type TradeDirection = "LONG" | "SHORT";
 
 /** Supported Binance Futures kline intervals for the worker. */
-export type Interval = "5m" | "15m" | "30m" | "1h";
+export type Interval = "1m" | "5m" | "15m" | "30m" | "1h";
 
-export const INTERVALS: Interval[] = ["5m", "15m", "30m", "1h"];
+export const INTERVALS: Interval[] = ["1m", "5m", "15m", "30m", "1h"];
 
 /** Normalized OHLCV candle. Matches the source engine's `Kline` shape. */
 export interface Kline {

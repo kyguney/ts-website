@@ -55,6 +55,10 @@ model UserPreference {
   // Pro users can set any subset of: ["5m", "15m", "30m", "1h"].
   intervals     String[] @default(["15m"])
   favoritePairs String[] @default([])
+  // Per-user risk parameters. Applied at signal-generation/read time to derive
+  // USD-denominated TP/SL. Bounded/validated at the API layer (Zod).
+  defaultLeverage Int    @default(10)    @map("default_leverage")
+  defaultRrRatio  String @default("1:2") @map("default_rr_ratio")
   updatedAt     DateTime @updatedAt
 
   @@map("user_preferences")

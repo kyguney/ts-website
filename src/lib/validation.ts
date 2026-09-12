@@ -26,20 +26,48 @@ export type SelectableInterval = (typeof SELECTABLE_INTERVALS)[number];
 export const FREE_MAX_FAVORITES = 3;
 export const PRO_MAX_FAVORITES = 10;
 
+/**
+ * Per-exchange leverage cap (Binance Futures maxes out at 125x). Configurable
+ * via env so a different venue / risk policy can lower it without a code change.
+ */
+export const MAX_LEVERAGE = (() => {
+  const parsed = Number.parseInt(process.env.MAX_LEVERAGE ?? "", 10);
+  return Number.isFinite(parsed) && parsed >= 1 ? parsed : 125;
+})();
+
+/** Risk:reward ratio string — `1:<positive number>` (e.g. "1:2", "1:3.5"). */
+export const RR_RATIO_PATTERN = /^1:\d+(\.\d+)?$/;
+
 /** A single favorite pair token: uppercased, de-duped upstream. */
 const favoritePairSchema = z.string().trim().toUpperCase().min(3).max(32);
+
+/** Default leverage validator: integer in [1, MAX_LEVERAGE]. */
+export const leverageSchema = z
+  .number()
+  .int("Leverage must be a whole number.")
+  .min(1, "Leverage must be at least 1.")
+  .max(MAX_LEVERAGE, `Leverage cannot exceed ${MAX_LEVERAGE}.`);
+
+/** Default risk:reward validator: matches the `1:<positive number>` pattern. */
+export const rrRatioSchema = z
+  .string()
+  .trim()
+  .regex(RR_RATIO_PATTERN, 'Risk:reward must look like "1:2" or "1:3.5".');
 
 /**
  * Tier-aware preferences validator.
  *
- *   • intervals   — PRO only (Free is pinned to 15m; the API rejects interval
- *                   changes from Free users). Optional so Free can PATCH just
- *                   favorites without sending intervals.
- *   • favoritePairs — both tiers, capped per plan (Free 3, Pro 10).
+ *   • intervals   — PRO/ULTIMATE only (Free is pinned to 15m; the API rejects
+ *                   interval changes from Free users). Optional so Free can
+ *                   PATCH just favorites/risk without sending intervals.
+ *   • favoritePairs — all tiers, capped per plan (Free 3, Pro/Ultimate 10).
+ *   • defaultLeverage / defaultRrRatio — all tiers (risk params are editable
+ *                   regardless of plan).
  */
-export function makePreferencesSchema(plan: "free" | "pro") {
+export function makePreferencesSchema(plan: "free" | "pro" | "ultimate") {
+  // Ultimate shares the Pro favorite cap (Free stays at the lower cap).
   const maxFavorites =
-    plan === "pro" ? PRO_MAX_FAVORITES : FREE_MAX_FAVORITES;
+    plan === "free" ? FREE_MAX_FAVORITES : PRO_MAX_FAVORITES;
 
   return z.object({
     intervals: z
@@ -53,11 +81,13 @@ export function makePreferencesSchema(plan: "free" | "pro") {
       .transform((arr) => Array.from(new Set(arr)))
       .refine((arr) => arr.length <= maxFavorites, {
         message:
-          plan === "pro"
-            ? `Pro plans can pin up to ${PRO_MAX_FAVORITES} favorites.`
-            : `Free plans can pin up to ${FREE_MAX_FAVORITES} favorites. Upgrade to Pro for more.`,
+          plan === "free"
+            ? `Free plans can pin up to ${FREE_MAX_FAVORITES} favorites. Upgrade to Pro for more.`
+            : `Your plan can pin up to ${PRO_MAX_FAVORITES} favorites.`,
       })
       .optional(),
+    defaultLeverage: leverageSchema.optional(),
+    defaultRrRatio: rrRatioSchema.optional(),
   });
 }
 

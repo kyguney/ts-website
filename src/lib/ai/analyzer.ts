@@ -17,6 +17,7 @@ import type {
   Interval,
   MarketRegime,
 } from "@/lib/market/types";
+import { computeUsdLevels, DEFAULT_RR_REWARD } from "@/lib/ai/risk";
 
 // --- Public output contract -------------------------------------------------
 
@@ -37,8 +38,15 @@ export interface AIAnalysisOutput {
 /** Wraps the structured output with provenance + derived fields. */
 export interface AIAnalysisResult {
   output: AIAnalysisOutput;
-  /** Where the analysis came from: the LLM, or the deterministic fallback. */
-  source: "llm" | "fallback";
+  /**
+   * Where the analysis came from:
+   *   • "llm"      — a live LLM response.
+   *   • "fallback" — the deterministic rule-based analysis (LLM unavailable).
+   *   • "degraded" — a previous cached rationale reused because the LLM did
+   *     not finish inside the per-tick budget; only the numeric price levels
+   *     were refreshed from the current price (see `generateWithBudget`).
+   */
+  source: "llm" | "fallback" | "degraded";
   /** The model id used (or "rule-based" for the fallback). */
   model: string;
   /** Human-readable risk:reward, e.g. "1:2.5" (computed from levels). */
@@ -331,45 +339,44 @@ export function parseAiOutput(text: string): AIAnalysisOutput {
 
 // --- Deterministic fallback -------------------------------------------------
 
-/** Rounds to a sensible precision for the price magnitude. */
-function roundPrice(p: number): number {
-  if (p >= 1) return Math.round(p * 1000) / 1000;
-  return Math.round(p * 1_000_000) / 1_000_000;
-}
-
 /**
  * Builds a rule-based analysis purely from the candidate — no network. Used
  * when the LLM is unavailable/misconfigured/failing. Deterministic so the same
  * candidate always yields the same guidance.
  *
- * Entry/stop/target geometry uses ATR% as the volatility unit and targets a
- * ~1:2 R:R, mirroring the source engine's trade-suggestion intent.
+ * The price ladder (entry zone / stop / take-profits) is delegated to
+ * {@link computeUsdLevels} so there is a single source of truth for the
+ * geometry. The ladder *shape* no longer lives here as hard-coded
+ * `1.5 / 0.5 / 2 / 3` multipliers — it comes from the risk module's tunables
+ * (`STOP_ATR_K`, `ATR_FLOOR_PCT`) and the reward multiple.
+ *
+ * IMPORTANT (Req 3.3): this output stays USD-agnostic. We call the risk math
+ * with a neutral *default profile* (leverage 1, a nominal balance) purely to
+ * derive the balance-independent PRICE levels; the USD amounts it also returns
+ * are intentionally discarded here. Per-user USD TP/SL are computed at read
+ * time in the feed from the user's leverage / R:R and their tier balance.
  */
 export function ruleBasedAnalysis(ctx: AnalysisContext): AIAnalysisOutput {
   const c = ctx.candidate;
   const isLong = c.direction === "LONG";
-  const price = c.price;
 
-  // Volatility unit: ATR% of price, floored so tiny ATR still yields a stop.
-  const atrFrac = Math.max(c.atrRatioPct, 0.3) / 100;
-  const stopDist = price * atrFrac * 1.5;
-  const entryPad = price * atrFrac * 0.5;
+  // Delegate the ladder geometry to the deterministic risk math using a
+  // default profile. Prices are independent of leverage/balance, so those
+  // inputs are placeholders (leverage 1, nominal balance) and the returned USD
+  // figures are ignored — only the price levels are used here.
+  const levels = computeUsdLevels({
+    entryPrice: c.price,
+    direction: c.direction,
+    atrRatioPct: c.atrRatioPct,
+    leverage: 1,
+    rrReward: DEFAULT_RR_REWARD,
+    balanceUsd: 1,
+  });
 
-  const entryRange: [number, number] = isLong
-    ? [roundPrice(price - entryPad), roundPrice(price)]
-    : [roundPrice(price), roundPrice(price + entryPad)];
-
-  const stopLoss = isLong
-    ? roundPrice(price - stopDist)
-    : roundPrice(price + stopDist);
-
-  // ~1:2 and ~1:3 R:R targets.
-  const tp1 = isLong
-    ? roundPrice(price + stopDist * 2)
-    : roundPrice(price - stopDist * 2);
-  const tp2 = isLong
-    ? roundPrice(price + stopDist * 3)
-    : roundPrice(price - stopDist * 3);
+  const entryRange = levels.entryZone;
+  const stopLoss = levels.stopLossPrice;
+  const tp1 = levels.tp1Price;
+  const tp2 = levels.tp2Price;
 
   // Sentiment follows direction; downgraded to NEUTRAL if flags warn.
   let sentiment: AIAnalysisOutput["sentiment"] = isLong ? "BULLISH" : "BEARISH";

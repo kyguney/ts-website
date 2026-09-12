@@ -25,6 +25,10 @@ export function getFreemius(): Freemius {
 export const PRO_PRICING_ID =
   process.env.NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID ?? "85687";
 
+/** The Ultimate plan's Freemius pricing id — used to gate Ultimate-only features. */
+export const ULTIMATE_PRICING_ID =
+  process.env.NEXT_PUBLIC_FREEMIUS_ULTIMATE_PRICING_ID ?? "88832";
+
 /**
  * Whether checkout should run in Freemius SANDBOX (test) mode.
  *
