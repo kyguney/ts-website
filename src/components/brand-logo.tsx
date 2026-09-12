@@ -13,11 +13,13 @@ export function BrandLogo({
   height = 32,
   className,
   priority = false,
+  unoptimized = false,
 }: {
   href?: string | null;
   height?: number;
   className?: string;
   priority?: boolean;
+  unoptimized?: boolean;
 }) {
   const img = (
     <Image
@@ -30,6 +32,7 @@ export function BrandLogo({
       height={1024}
       quality={90}
       priority={priority}
+      unoptimized={unoptimized}
       // Hint a generous rendered width so the optimizer serves a high-res
       // candidate (avoids the browser picking a small, blurry 256px source).
       sizes="320px"

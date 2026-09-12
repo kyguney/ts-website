@@ -36,7 +36,14 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (isMaintenanceMode()) {
-    if (MAINTENANCE_ALLOWLIST.includes(pathname)) {
+    // Let the allowlisted page and any asset request through untouched. Asset
+    // requests are Next internals (/_next/*) and static public files (anything
+    // with a file extension, e.g. /logo.png, /favicon.svg). Without this, the
+    // rewrite below turns e.g. /logo.png and /_next/image into the Coming Soon
+    // HTML, which renders as a broken image on the gate page.
+    const isAsset =
+      pathname.startsWith("/_next/") || /\.[a-zA-Z0-9]+$/.test(pathname);
+    if (MAINTENANCE_ALLOWLIST.includes(pathname) || isAsset) {
       return NextResponse.next();
     }
     const url = req.nextUrl.clone();
