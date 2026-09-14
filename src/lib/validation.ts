@@ -9,6 +9,7 @@ export const registerSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(120).optional(),
   email: z.string().email("Enter a valid email address."),
   password: z.string().min(8, "Password must be at least 8 characters."),
+  turnstileToken: z.string().min(1, "Please complete the human verification."),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

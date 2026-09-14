@@ -26,7 +26,26 @@ function ShardCluster({ className }: { className: string }) {
   );
 }
 
-export function FacetsBackground() {
+/**
+ * @param variant
+ *   "default" — top-left, top-right, and mid-left clusters (Coming Soon page).
+ *   "sides"   — only vertically-centered, taller left + right clusters, no
+ *               mid-left shape (used by the register shell).
+ */
+export function FacetsBackground({
+  variant = "default",
+}: {
+  variant?: "default" | "sides";
+}) {
+  if (variant === "sides") {
+    return (
+      <>
+        <ShardCluster className="ts-facets ts-facets--left-center" />
+        <ShardCluster className="ts-facets ts-facets--right-center" />
+      </>
+    );
+  }
+
   return (
     <>
       <ShardCluster className="ts-facets ts-facets--tl" />

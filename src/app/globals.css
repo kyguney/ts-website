@@ -504,10 +504,59 @@
   left: -70px;
   opacity: 0.45;
 }
+
+/* Vertically-centered, taller left + right side clusters (register shell).
+   We size by HEIGHT (the shard SVG keeps its aspect ratio) and pin to the
+   vertical center with top:50% + translateY(-50%). */
+.ts-facets--left-center,
+.ts-facets--right-center {
+  top: 50%;
+  width: auto;
+  height: clamp(420px, 78vh, 760px);
+  opacity: 0.4;
+}
+.ts-facets--left-center {
+  left: -60px;
+  transform: translateY(-50%);
+}
+.ts-facets--right-center {
+  right: -60px;
+  transform: translateY(-50%) scaleX(-1);
+  opacity: 0.28;
+}
+
 @media (max-width: 768px) {
   .ts-facets {
     opacity: 0.2;
     width: clamp(90px, 28vw, 150px);
+  }
+  .ts-facets--left-center,
+  .ts-facets--right-center {
+    height: clamp(280px, 50vh, 420px);
+  }
+}ts-facets--right-center {
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(200px, 26vw, 420px);
+  opacity: 0.4;
+}
+.ts-facets--left-center {
+  left: -90px;
+}
+.ts-facets--right-center {
+  right: -90px;
+  transform: translateY(-50%) scaleX(-1);
+  opacity: 0.28;
+}
+
+@media (max-width: 768px) {
+  .ts-facets {
+    opacity: 0.2;
+    width: clamp(90px, 28vw, 150px);
+  }
+  .ts-facets--left-center,
+  .ts-facets--right-center {
+    width: clamp(130px, 34vw, 220px);
   }
 }
 

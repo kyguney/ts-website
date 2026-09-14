@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validation";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +28,20 @@ export async function POST(req: Request) {
   }
 
   const email = parsed.data.email.toLowerCase();
-  const { name, password } = parsed.data;
+  const { name, password, turnstileToken } = parsed.data;
+
+  // Bot protection: verify the Cloudflare Turnstile token before doing any work.
+  const remoteIp =
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    null;
+  const humanVerified = await verifyTurnstileToken(turnstileToken, remoteIp);
+  if (!humanVerified) {
+    return NextResponse.json(
+      { ok: false, error: "Human verification failed. Please try again." },
+      { status: 400 }
+    );
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {

@@ -52,6 +52,8 @@ services:
         NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID: "${NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID:-85687}"
         # Browser WebSocket gateway URL (inlined into the client bundle).
         NEXT_PUBLIC_WS_URL: "${NEXT_PUBLIC_WS_URL:-ws://localhost:3001}"
+        # Cloudflare Turnstile site key (inlined into the client bundle).
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: "${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}"
     restart: unless-stopped
     depends_on:
       db:
@@ -69,6 +71,16 @@ services:
       NEXTAUTH_URL: "${NEXTAUTH_URL:-http://localhost:3000}"
       NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
       NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+      # OAuth providers (from .env) — buttons enable only when both keys are set.
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+      GITHUB_CLIENT_ID: "${GITHUB_CLIENT_ID:-}"
+      GITHUB_CLIENT_SECRET: "${GITHUB_CLIENT_SECRET:-}"
+      MICROSOFT_CLIENT_ID: "${MICROSOFT_CLIENT_ID:-}"
+      MICROSOFT_CLIENT_SECRET: "${MICROSOFT_CLIENT_SECRET:-}"
+      # Cloudflare Turnstile (site key inlined at build; secret verified server-side).
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: "${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}"
+      TURNSTILE_SECRET_KEY: "${TURNSTILE_SECRET_KEY:-}"
       # Freemius (from .env)
       FREEMIUS_PRODUCT_ID: "${FREEMIUS_PRODUCT_ID:-}"
       FREEMIUS_PUBLIC_KEY: "${FREEMIUS_PUBLIC_KEY:-}"
