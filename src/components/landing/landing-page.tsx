@@ -1,127 +1,162 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand-logo";
-import { SignalDemo } from "./signal-demo";
+import { FacetsBackground } from "./facets-background";
+import { HeroChart } from "./hero-chart";
+import { TickerBar } from "./ticker-bar";
+import { SignalsList } from "./signals-list";
+import { DemoPortfolioCard } from "./demo-portfolio-card";
 import { Pricing } from "./pricing";
+import { FaqSection } from "./faq-section";
+import { SiteFooter } from "./site-footer";
 
-const FEATURES = [
-  {
-    title: "Market Scanner",
-    desc: "Continuously scans the market for high-probability long and short setups.",
-  },
-  {
-    title: "Regime Detection",
-    desc: "Knows whether the market is trending or ranging before you commit.",
-  },
-  {
-    title: "Momentum & Volatility",
-    desc: "Flags momentum and volatility spikes the moment they start building.",
-  },
-  {
-    title: "Long / Short Scoring",
-    desc: "A single directional conviction score you can act on with clarity.",
-  },
+const DEMO_BULLETS = [
+  "Start with $1,000 in virtual funds",
+  "Follow live signals and track your demo performance",
+  "No real money required — risk-free practice",
 ];
 
 export function LandingPage({ isAuthed }: { isAuthed: boolean }) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="ts-landing min-h-screen">
+      {/* Decorative crystalline facet shards behind all content. */}
+      <FacetsBackground />
+
       {/* Nav */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
-        <BrandLogo height={112} priority />
+        <BrandLogo height={102} priority />
 
-        <nav className="flex items-center gap-2">
+        <nav className="flex items-center gap-1 sm:gap-2">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="#markets">Markets</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="#signals">Signals</Link>
+          </Button>
           <Button asChild variant="ghost" size="sm">
             <Link href="#pricing">Pricing</Link>
           </Button>
           {isAuthed ? (
-            <Button asChild size="sm">
+            <Button asChild size="sm" className="ts-cta">
               <Link href="/dashboard">Dashboard</Link>
             </Button>
           ) : (
             <>
               <Button asChild variant="ghost" size="sm">
-                <Link href="/login">Sign in</Link>
+                <Link href="/login">Log In</Link>
               </Button>
-              <Button asChild size="sm">
-                <Link href="/register">Get started</Link>
+              <Button asChild size="sm" className="ts-cta">
+                <Link href="/register">Start Free Demo</Link>
               </Button>
             </>
           )}
         </nav>
       </header>
 
-      {/* Hero */}
-      <section className="mx-auto max-w-4xl px-4 pb-14 pt-10 text-center sm:pt-16">
-        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          AI-Powered Crypto Intelligence
-        </p>
-        <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
-          Know when to go{" "}
-          <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent">
-            Long
-          </span>{" "}
-          or{" "}
-          <span className="bg-gradient-to-r from-rose-400 to-rose-600 bg-clip-text text-transparent">
-            Short
-          </span>
-        </h1>
-        <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg">
-          TrendScore reads the market with a multi-agent AI engine — scanning
-          momentum, detecting regime shifts, and scoring long/short setups across
-          the crypto market, so you act with conviction instead of guessing.
-        </p>
-        <div className="mt-8 flex items-center justify-center gap-3">
-          <Button asChild size="lg">
-            <Link href="/register">Start free</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="#pricing">See pricing</Link>
-          </Button>
+      {/* Hero: copy (left) + live chart preview (right) */}
+      <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-8 pt-8 lg:grid-cols-2 lg:pt-14">
+        <div>
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ts-cyan-2)]">
+            Crypto Market Intelligence
+          </p>
+          <h1 className="text-balance text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
+            Trade Smarter.
+            <br />
+            <span className="ts-grad-text">Score Higher.</span>
+          </h1>
+          <p className="mt-5 max-w-md text-pretty text-base text-[var(--ts-text-muted)] sm:text-lg">
+            Crypto market trends, scores, and LONG / SHORT signals in one clear
+            view. Read momentum, detect regime shifts, and act with conviction.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Button asChild size="lg" className="ts-cta">
+              <Link href="/register">
+                Start Free Demo <ArrowRight className="ml-1 size-4" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="#markets">Membership Options</Link>
+            </Button>
+          </div>
+          <p className="mt-3 text-xs text-[var(--ts-text-muted)]">
+            Practice with virtual funds.
+          </p>
+        </div>
+
+        <div className="w-full">
+          <HeroChart />
         </div>
       </section>
 
-      {/* Live demo */}
-      <section className="mx-auto max-w-6xl px-4 pb-16">
-        <SignalDemo />
+      {/* Ticker bar */}
+      <section id="markets" className="mx-auto max-w-6xl px-4 pb-16 pt-4">
+        <TickerBar />
       </section>
 
-      {/* Features */}
-      <section className="mx-auto max-w-5xl px-4 py-12">
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-xl border border-white/10 bg-white/[0.03] p-5"
-            >
-              <h3 className="font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{f.desc}</p>
+      {/*
+        NOTE: The large "Market Overview" data table section has been removed
+        intentionally — this space is reserved for future modules (Leaderboard /
+        Testimonials). Section spacing is preserved by the flow below.
+      */}
+
+      {/* Latest Signals */}
+      <section id="signals" className="mx-auto max-w-6xl px-4 py-8">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Latest Signals
+            </h2>
+            <p className="mt-2 text-[var(--ts-text-muted)]">
+              Direction, context and timing in one view.
+            </p>
+          </div>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/register">
+              View All Signals <ArrowRight className="ml-1 size-4" />
+            </Link>
+          </Button>
+        </div>
+        <SignalsList />
+      </section>
+
+      {/* Demo showcase */}
+      <section id="demo" className="mx-auto max-w-6xl px-4 py-16">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Test your strategy.
+              <br />
+              Use virtual funds.
+            </h2>
+            <ul className="mt-6 flex flex-col gap-3 text-sm">
+              {DEMO_BULLETS.map((b) => (
+                <li key={b} className="flex items-start gap-2">
+                  <span className="mt-1 size-1.5 shrink-0 rounded-full bg-[var(--ts-emerald)]" />
+                  <span className="text-[var(--ts-text-muted)]">{b}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8">
+              <Button asChild size="lg" className="ts-cta">
+                <Link href="/register">
+                  Start Free Demo <ArrowRight className="ml-1 size-4" />
+                </Link>
+              </Button>
             </div>
-          ))}
+          </div>
+          <DemoPortfolioCard />
         </div>
       </section>
 
       {/* Pricing */}
       <Pricing />
 
+      {/* FAQ */}
+      <FaqSection />
+
       {/* Footer */}
-      <footer className="border-t border-white/10 px-4 py-10 text-center text-sm text-muted-foreground">
-        <p>
-          Questions or Comments? Reach us at{" "}
-          <a
-            href="mailto:info@trendscore.io"
-            className="text-primary hover:underline"
-          >
-            info@trendscore.io
-          </a>
-        </p>
-        <p className="mt-2">
-          © {new Date().getFullYear()} TrendScore.io — All rights reserved.
-        </p>
-        <p className="mt-1 text-xs opacity-70">
-          Not financial advice. Crypto trading involves substantial risk.
-        </p>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

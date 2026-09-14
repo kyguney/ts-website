@@ -60,6 +60,10 @@ async function getJson<T>(path: string, timeoutMs = 10_000): Promise<T> {
     const res = await fetch(`${restBaseUrl()}${path}`, {
       headers: apiHeaders(),
       signal: controller.signal,
+      // Always hit Binance live: never let Next.js's default fetch cache serve
+      // stale market data from a route handler. (No-op in the plain-Node
+      // worker.)
+      cache: "no-store",
     });
     if (!res.ok) {
       throw new Error(`Binance ${path} -> HTTP ${res.status}`);

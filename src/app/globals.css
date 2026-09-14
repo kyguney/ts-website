@@ -427,3 +427,175 @@
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .eyebrow, .title, .subtitle, .waitlist, .features { opacity: 1; }
 }
+
+/* ===========================================================================
+   TrendScore landing v2 — dark market-intelligence theme tokens & utilities.
+   Scoped design tokens for the redesigned marketing landing page. These do NOT
+   affect the shadcn app tokens above; the landing components reference these
+   via arbitrary Tailwind values (e.g. bg-[var(--ts-canvas)]) or the helper
+   classes below.
+   ======================================================================== */
+:root {
+  /* Canvas / surfaces (deep navy-blue) */
+  --ts-canvas: #070d18;
+  --ts-canvas-2: #0b1424;
+  --ts-canvas-3: #0f1e38;
+  --ts-surface: rgba(255, 255, 255, 0.03);
+  --ts-surface-2: rgba(255, 255, 255, 0.05);
+  --ts-stroke: rgba(255, 255, 255, 0.08);
+  --ts-stroke-strong: rgba(255, 255, 255, 0.14);
+
+  /* Brand primary — electric emerald */
+  --ts-emerald: #00b875;
+  --ts-emerald-2: #00d26a;
+  /* Accent — vibrant cyan */
+  --ts-cyan: #00b4d8;
+  --ts-cyan-2: #38bdf8;
+  /* Bearish / neutral */
+  --ts-red: #ef4444;
+  --ts-red-2: #f87171;
+  --ts-slate: #94a3b8;
+
+  /* Text */
+  --ts-text: #e6edf7;
+  --ts-text-muted: #94a3b8;
+}
+
+/* Canvas gradient + glows ported verbatim from the reference `.site`. The
+   gradient lives on the growing .ts-landing element (not a fixed layer) so it
+   flows down the page as you scroll. Crystalline shards layer via .ts-facets. */
+.ts-landing {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 10% 5%, rgba(10, 102, 194, 0.14), transparent 40%),
+    radial-gradient(ellipse at 95% 55%, rgba(0, 180, 216, 0.06), transparent 35%),
+    linear-gradient(180deg, #06162d 0%, #041426 50%, #06152a 100%);
+  color: var(--ts-text);
+}
+
+/* Decorative crystalline "facet" shard clusters hugging the page corners. They
+   scroll WITH the page (absolute, not fixed) and fade on small screens. */
+.ts-facets {
+  position: absolute;
+  width: clamp(120px, 18vw, 260px);
+  height: auto;
+  pointer-events: none;
+  z-index: -1;
+}
+/* Left-side clusters use the reference's 0.45 opacity; right-side use 0.3. */
+/* Top-left */
+.ts-facets--tl {
+  top: -30px;
+  left: -55px;
+  opacity: 0.45;
+}
+/* Top-right (mirrored) */
+.ts-facets--tr {
+  top: -20px;
+  right: -55px;
+  transform: scaleX(-1);
+  opacity: 0.3;
+}
+/* Mid-left */
+.ts-facets--ml {
+  top: 60%;
+  left: -70px;
+  opacity: 0.45;
+}
+@media (max-width: 768px) {
+  .ts-facets {
+    opacity: 0.2;
+    width: clamp(90px, 28vw, 150px);
+  }
+}
+
+/* Glassmorphism card container — navy glass with a cyan-tinted stroke
+   (ported from the reference `.card`). */
+.ts-card {
+  border: 1px solid rgba(0, 180, 216, 0.18);
+  background: linear-gradient(
+    145deg,
+    rgba(13, 32, 53, 0.9),
+    rgba(5, 21, 38, 0.95)
+  );
+  border-radius: 1rem; /* rounded-2xl */
+  backdrop-filter: blur(10px);
+}
+
+/* Featured (Pro) plan glow highlight. */
+.ts-card--featured {
+  border-color: rgba(0, 230, 118, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(0, 230, 118, 0.25),
+    0 0 40px -8px rgba(0, 180, 216, 0.45),
+    0 0 60px -20px rgba(0, 230, 118, 0.4);
+}
+
+/* Emerald / cyan gradient text. */
+.ts-grad-text {
+  background-image: linear-gradient(120deg, var(--ts-emerald), var(--ts-cyan-2));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Primary emerald CTA. */
+.ts-cta {
+  background-image: linear-gradient(135deg, var(--ts-emerald), var(--ts-emerald-2));
+  color: #052015;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.ts-cta:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 30px -8px rgba(0, 230, 118, 0.5);
+}
+
+/* Skeleton shimmer for loading states. */
+.ts-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+.ts-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  animation: ts-shimmer 1.4s infinite;
+}
+@keyframes ts-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* FAQ accordion expand/collapse (smooth height via grid-rows trick). */
+.ts-accordion-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+.ts-accordion-panel[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+.ts-accordion-panel > div {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-skeleton::after,
+  .ts-accordion-panel {
+    animation: none;
+    transition: none;
+  }
+}

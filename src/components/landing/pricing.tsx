@@ -1,111 +1,106 @@
-import Link from "next/link";
-import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { type CheckoutSerialized } from "@freemius/sdk";
+import AppCheckoutProvider from "@/components/app-checkout-provider";
+import {
+  getFreemius,
+  IS_FREEMIUS_SANDBOX,
+  PRO_PRICING_ID,
+  ULTIMATE_PRICING_ID,
+} from "@/lib/freemius";
+import { PricingSection, type PricingPlan } from "./pricing-section";
 
-const PLANS = [
+/**
+ * The public landing pricing tiers, aligned to the real Freemius catalog:
+ *   • Free      (plan 64048)  — free tier, links to register.
+ *   • Pro       (plan 64049)  — $14.95/mo · $149.95/yr — FEATURED/recommended.
+ *   • Ultimate  (plan 67357)  — $29.95/mo · $299.95/yr.
+ *
+ * Plan IDs are the Freemius PLAN ids (from the Plans table). Pricing IDs are
+ * the per-cycle pricing ids used to gate access. Both fall back to the known
+ * catalog values but can be overridden via env for staging/other stores.
+ */
+const FREEMIUS_PRO_PLAN_ID = process.env.NEXT_PUBLIC_FREEMIUS_PRO_PLAN_ID ?? "64049";
+const FREEMIUS_ULTIMATE_PLAN_ID =
+  process.env.NEXT_PUBLIC_FREEMIUS_ULTIMATE_PLAN_ID ?? "67357";
+
+const PLANS: PricingPlan[] = [
   {
+    key: "free",
     name: "Free",
-    price: "$0",
-    cadence: "forever",
-    description: "Get started with core signals.",
+    tagline: "Free demo — practice with virtual funds.",
+    monthly: null,
+    annual: null,
     features: [
-      "Delayed 15m long/short signals",
-      "Top majors coverage",
-      "Daily market regime summary",
+      "Virtual portfolio",
+      "Sample analytics",
+      "Delayed 15m signals",
       "Community access",
     ],
-    cta: "Start free",
-    href: "/register",
-    highlighted: false,
+    cta: "Try Demo",
   },
   {
+    key: "pro",
     name: "Pro",
-    price: "$29",
-    cadence: "per month",
-    description: "Real-time edge across the full market.",
+    tagline: "Real-time signals, trend analytics & market scores.",
+    monthly: 14.95,
+    annual: 149.95,
+    featured: true,
     features: [
       "Real-time 5m long/short signals",
-      "Full market scanner (all symbols)",
-      "Momentum & volatility spike alerts",
-      "Advanced regime detection",
+      "Trend analytics & signal access",
+      "Market regime detection",
+      "Momentum & volatility alerts",
       "Priority support",
     ],
     cta: "Get Pro",
-    href: "/register",
-    highlighted: true,
+    planId: FREEMIUS_PRO_PLAN_ID,
+    pricingIdMonthly: PRO_PRICING_ID,
+    pricingIdAnnual:
+      process.env.NEXT_PUBLIC_FREEMIUS_PRO_PRICING_ID_ANNUAL ?? PRO_PRICING_ID,
   },
   {
+    key: "ultimate",
     name: "Ultimate",
-    price: "$99",
-    cadence: "per month",
-    description: "The fastest cadence and the full feature set.",
+    tagline: "Advanced filters, expanded analytics & fastest cadence.",
+    monthly: 29.95,
+    annual: 299.95,
     features: [
       "Fastest 1m signal cadence",
       "Everything in Pro",
-      "USD-denominated TP/SL from your risk profile",
+      "Advanced filters & expanded analytics",
       "Full TP ladder on every signal",
-      "Highest tier priority support",
+      "USD-denominated TP/SL",
     ],
     cta: "Get Ultimate",
-    href: "/register",
-    highlighted: false,
+    planId: FREEMIUS_ULTIMATE_PLAN_ID,
+    pricingIdMonthly: ULTIMATE_PRICING_ID,
+    pricingIdAnnual:
+      process.env.NEXT_PUBLIC_FREEMIUS_ULTIMATE_PRICING_ID_ANNUAL ??
+      ULTIMATE_PRICING_ID,
   },
 ];
 
-export function Pricing() {
-  return (
-    <section id="pricing" className="mx-auto w-full max-w-6xl px-4 py-20">
-      <div className="mb-10 text-center">
-        <h2 className="text-3xl font-bold tracking-tight">Simple pricing</h2>
-        <p className="mt-2 text-muted-foreground">
-          Start free. Upgrade to Pro for the real-time edge, or Ultimate for the
-          fastest 1m cadence.
-        </p>
-      </div>
+export async function Pricing() {
+  // Build an anonymous Freemius checkout for public visitors. If the Freemius
+  // secrets aren't configured (e.g. local dev / preview), degrade gracefully:
+  // render the same pricing UI with CTAs that route to /register.
+  let serialized: CheckoutSerialized | null = null;
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {PLANS.map((plan) => (
-          <div
-            key={plan.name}
-            className={cn(
-              "relative flex flex-col rounded-2xl border p-6",
-              plan.highlighted
-                ? "border-primary/50 bg-primary/5 shadow-lg shadow-primary/10"
-                : "border-white/10 bg-white/[0.03]"
-            )}
-          >
-            {plan.highlighted && (
-              <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                Most popular
-              </span>
-            )}
-            <h3 className="text-lg font-semibold">{plan.name}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
-            <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-4xl font-bold">{plan.price}</span>
-              <span className="text-sm text-muted-foreground">/ {plan.cadence}</span>
-            </div>
-            <ul className="mt-6 flex flex-col gap-3 text-sm">
-              {plan.features.map((f) => (
-                <li key={f} className="flex items-start gap-2">
-                  <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-8">
-              <Button
-                asChild
-                className="w-full"
-                variant={plan.highlighted ? "default" : "outline"}
-              >
-                <Link href={plan.href}>{plan.cta}</Link>
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
+  try {
+    const checkout = await getFreemius().checkout.create({
+      isSandbox: IS_FREEMIUS_SANDBOX,
+    });
+    serialized = checkout.serialize();
+  } catch {
+    serialized = null;
+  }
+
+  if (!serialized) {
+    return <PricingSection plans={PLANS} checkoutEnabled={false} />;
+  }
+
+  return (
+    <AppCheckoutProvider checkout={serialized}>
+      <PricingSection plans={PLANS} checkoutEnabled />
+    </AppCheckoutProvider>
   );
 }

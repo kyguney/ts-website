@@ -23,19 +23,20 @@ export function BrandLogo({
 }) {
   const img = (
     <Image
-      src="/logo.png"
+      src="/logo-landscape.png"
       alt="TrendScore.io"
       // Pass the FULL intrinsic size so the optimizer keeps source resolution;
       // the display size is controlled by CSS height below (stays crisp, incl.
       // on retina). quality 90 avoids soft/over-compressed edges.
-      width={1536}
-      height={1024}
+      width={1962}
+      height={801}
       quality={90}
       priority={priority}
       unoptimized={unoptimized}
       // Hint a generous rendered width so the optimizer serves a high-res
-      // candidate (avoids the browser picking a small, blurry 256px source).
-      sizes="320px"
+      // candidate (avoids the browser picking a small, blurry source). The
+      // landscape mark is wide, so hint accordingly.
+      sizes="400px"
       className={cn("w-auto object-contain", className)}
       style={{ height, width: "auto" }}
     />
