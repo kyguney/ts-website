@@ -15,7 +15,11 @@ const DEFAULT_NOTE: NoteState = {
   type: "",
 };
 
-export default function WaitlistForm() {
+export default function WaitlistForm({
+  variant = "legacy",
+}: {
+  variant?: "legacy" | "modern";
+}) {
   const [email, setEmail] = useState("");
   const [note, setNote] = useState<NoteState>(DEFAULT_NOTE);
   const [submitting, setSubmitting] = useState(false);
@@ -59,6 +63,44 @@ export default function WaitlistForm() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (variant === "modern") {
+    const noteColor =
+      note.type === "is-error"
+        ? "text-[var(--ts-red)]"
+        : note.type === "is-success"
+          ? "text-[var(--ts-emerald)]"
+          : "text-[var(--ts-text-muted)]";
+    return (
+      <form className="w-full max-w-md" onSubmit={handleSubmit} noValidate>
+        <div className="ts-card flex items-center gap-2 p-1.5">
+          <input
+            ref={inputRef}
+            type="email"
+            name="email"
+            placeholder="you@email.com"
+            autoComplete="email"
+            aria-label="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={submitting}
+            required
+            className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-sm text-[var(--ts-text)] placeholder:text-[var(--ts-text-muted)] outline-none"
+          />
+          <button
+            type="submit"
+            disabled={submitting}
+            className="ts-cta shrink-0 whitespace-nowrap rounded-[calc(1rem-6px)] px-5 py-2.5 text-sm disabled:opacity-70"
+          >
+            {submitting ? "Saving…" : "Get Early Access"}
+          </button>
+        </div>
+        <p className={`mt-2.5 text-xs ${noteColor}`} role="status" aria-live="polite">
+          {note.message}
+        </p>
+      </form>
+    );
   }
 
   return (
